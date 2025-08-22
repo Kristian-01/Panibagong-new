@@ -27,6 +27,8 @@ class _MainTabViewState extends State<MainTabView> {
       backgroundColor: const Color(0xfff5f5f5),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterDocked,
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
+      resizeToAvoidBottomInset: false,
       floatingActionButton: SizedBox(
         width: 60,
         height: 60,

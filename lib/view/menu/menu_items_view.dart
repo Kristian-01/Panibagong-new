@@ -3,7 +3,7 @@ import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
 
 import '../../common_widget/menu_item_row.dart';
-import '../more/my_order_view.dart';
+import '../../common_widget/cart_icon.dart';
 import 'item_details_view.dart';
 
 class MenuItemsView extends StatefulWidget {
@@ -118,19 +118,7 @@ class _MenuItemsViewState extends State<MenuItemsView> {
                             fontWeight: FontWeight.w800),
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MyOrderView()));
-                      },
-                      icon: Image.asset(
-                        "assets/img/shopping_cart.png",
-                        width: 25,
-                        height: 25,
-                      ),
-                    ),
+                    const CartIcon(size: 25),
                   ],
                 ),
               ),

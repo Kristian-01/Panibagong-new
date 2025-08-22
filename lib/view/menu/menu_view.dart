@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
-import '../more/my_order_view.dart';
+import '../../common_widget/cart_icon.dart';
 import 'menu_items_view.dart';
 
 class MenuView extends StatefulWidget {
@@ -69,25 +69,13 @@ class _MenuViewState extends State<MenuView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Menu",
+                          "Reorder",
                           style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 20,
                               fontWeight: FontWeight.w800),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const MyOrderView()));
-                          },
-                          icon: Image.asset(
-                            "assets/img/shopping_cart.png",
-                            width: 25,
-                            height: 25,
-                          ),
-                        ),
+                        const CartIcon(size: 25),
                       ],
                     ),
                   ),

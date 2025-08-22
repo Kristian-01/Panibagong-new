@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
-import '../more/my_order_view.dart';
+import '../../common_widget/cart_icon.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -48,19 +48,7 @@ class _ProfileViewState extends State<ProfileView> {
                       fontSize: 20,
                       fontWeight: FontWeight.w800),
                 ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const MyOrderView()));
-                  },
-                  icon: Image.asset(
-                    "assets/img/shopping_cart.png",
-                    width: 25,
-                    height: 25,
-                  ),
-                ),
+                const CartIcon(size: 25),
               ],
             ),
           ),

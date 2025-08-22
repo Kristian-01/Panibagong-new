@@ -3,6 +3,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../common_widget/round_icon_button.dart';
 
 import '../../common/color_extension.dart';
+import '../../common/globs.dart';
 import '../more/my_order_view.dart';
 
 class ItemDetailsView extends StatefulWidget {
@@ -184,7 +185,7 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                                       horizontal: 25),
                                   child: Divider(
                                     color:
-                                        TColor.secondaryText.withOpacity(0.4),
+                                        TColor.secondaryText.withValues(alpha: 0.4),
                                     height: 1,
                                   )),
                               const SizedBox(
@@ -459,7 +460,15 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
                                                         icon:
                                                             "assets/img/shopping_add.png",
                                                         color: TColor.primary,
-                                                        onPressed: () {}),
+                                                        onPressed: () {
+                                                          // Add current item to cart
+                                                          addToCart({
+                                                            "name": "Selected Item",
+                                                            "price": "\$${(price * qty).toString()}",
+                                                            "quantity": qty,
+                                                            "image": "assets/img/item_1.png"
+                                                          });
+                                                        }),
                                                   )
                                                 ],
                                               )),

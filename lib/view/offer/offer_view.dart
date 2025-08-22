@@ -3,7 +3,8 @@ import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
 
 import '../../common_widget/popular_resutaurant_row.dart';
-import '../more/my_order_view.dart';
+import '../../common_widget/cart_icon.dart';
+
 
 class OfferView extends StatefulWidget {
   const OfferView({super.key});
@@ -81,30 +82,20 @@ class _OfferViewState extends State<OfferView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Orders",
-                      style: TextStyle(
-                          color: TColor.primaryText,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MyOrderView()));
-                      },
-                      icon: Image.asset(
-                        "assets/img/shopping_cart.png",
-                        width: 25,
-                        height: 25,
-                      ),
-                    ),
-                  ],
-                ),
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Text(
+      "Orders",
+      style: TextStyle(
+        color: TColor.primaryText,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+    const CartIcon(), // ✅ reusable cart with badge
+  ],
+),
+
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),

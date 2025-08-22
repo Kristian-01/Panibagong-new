@@ -4,6 +4,87 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../main.dart';
+import 'package:flutter/material.dart';
+
+/// Global cart item list
+List<Map<String, dynamic>> cartItems = [];
+
+/// Cart counter (ValueNotifier so UI updates automatically)
+ValueNotifier<int> cartCount = ValueNotifier<int>(0);
+
+/// Add item to cart (with quantity management)
+void addToCart(Map<String, dynamic> item) {
+  // Check if item already exists in cart
+  int existingIndex = cartItems.indexWhere((cartItem) =>
+    cartItem["name"] == item["name"] && cartItem["price"] == item["price"]);
+
+  if (existingIndex != -1) {
+    // Item exists, increase quantity
+    cartItems[existingIndex]["quantity"] = (cartItems[existingIndex]["quantity"] ?? 1) + 1;
+  } else {
+    // New item, add with quantity 1
+    Map<String, dynamic> newItem = Map<String, dynamic>.from(item);
+    newItem["quantity"] = 1;
+    cartItems.add(newItem);
+  }
+
+  // Update total count (sum of all quantities)
+  cartCount.value = cartItems.fold(0, (sum, item) => sum + (item["quantity"] as int? ?? 1));
+}
+
+/// Remove one quantity of item from cart
+void removeFromCart(int index) {
+  if (index >= 0 && index < cartItems.length) {
+    int currentQty = cartItems[index]["quantity"] ?? 1;
+    if (currentQty > 1) {
+      // Decrease quantity
+      cartItems[index]["quantity"] = currentQty - 1;
+    } else {
+      // Remove item completely
+      cartItems.removeAt(index);
+    }
+    // Update total count
+    cartCount.value = cartItems.fold(0, (sum, item) => sum + (item["quantity"] as int? ?? 1));
+  }
+}
+
+/// Remove entire item from cart (all quantities)
+void removeItemCompletely(int index) {
+  if (index >= 0 && index < cartItems.length) {
+    cartItems.removeAt(index);
+    cartCount.value = cartItems.fold(0, (sum, item) => sum + (item["quantity"] as int? ?? 1));
+  }
+}
+
+/// Increase item quantity
+void increaseQuantity(int index) {
+  if (index >= 0 && index < cartItems.length) {
+    cartItems[index]["quantity"] = (cartItems[index]["quantity"] ?? 1) + 1;
+    cartCount.value = cartItems.fold(0, (sum, item) => sum + (item["quantity"] as int? ?? 1));
+  }
+}
+
+/// Decrease item quantity
+void decreaseQuantity(int index) {
+  if (index >= 0 && index < cartItems.length) {
+    int currentQty = cartItems[index]["quantity"] ?? 1;
+    if (currentQty > 1) {
+      cartItems[index]["quantity"] = currentQty - 1;
+      cartCount.value = cartItems.fold(0, (sum, item) => sum + (item["quantity"] as int? ?? 1));
+    }
+  }
+}
+
+/// Clear all cart items
+void clearCart() {
+  cartItems.clear();
+  cartCount.value = 0;
+}
+
+/// Get total cart items count
+int getCartCount() {
+  return cartItems.length;
+}
 
 class Globs {
   static const appName = "Food Delivery";

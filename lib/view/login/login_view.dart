@@ -36,19 +36,22 @@ class _LoginViewState extends State<LoginView> {
                 height: 64,
               ),
               Text(
-                "Login",
+                "Nine27 Pharmacy",
                 style: TextStyle(
                     color: TColor.primaryText,
                     fontSize: 30,
                     fontWeight: FontWeight.w800),
               ),
-              Text(
-                "Add your details to login",
+              Padding(
+                padding: const EdgeInsets.only(top: 20, bottom: 15),
+                child: Text("Login",
                 style: TextStyle(
                     color: TColor.secondaryText,
-                    fontSize: 14,
+                    fontSize: 25,
                     fontWeight: FontWeight.w500),
+                    ),
               ),
+              
               const SizedBox(
                 height: 25,
               ),
@@ -107,12 +110,7 @@ class _LoginViewState extends State<LoginView> {
               const SizedBox(
                 height: 30,
               ),
-              RoundIconButton(
-                icon: "assets/img/facebook_logo.png",
-                title: "Login with Facebook",
-                color: const Color(0xff367FC0),
-                onPressed: () {},
-              ),
+             
               const SizedBox(
                 height: 25,
               ),

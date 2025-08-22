@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
+import '../../common/globs.dart';   // 👈 import the shared counter
 
 class ChangeAddressView extends StatefulWidget {
   const ChangeAddressView({super.key});
@@ -26,7 +27,6 @@ class _ChangeAddressViewState extends State<ChangeAddressView> {
   static const CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
       target: LatLng(37.42796133580664, -122.085749655962),
-      // tilt: 59.440717697143555,
       zoom: 14.151926040649414);
 
   @override
@@ -34,9 +34,10 @@ class _ChangeAddressViewState extends State<ChangeAddressView> {
     super.initState();
     _customMarkers = [
       MarkerData(
-          marker:
-              Marker(markerId: const MarkerId('id-1'), position: locations[0]),
-          child: _customMarker('Everywhere\nis a Widgets', Colors.blue)),
+        marker: Marker(
+            markerId: const MarkerId('id-1'), position: locations[0]),
+        child: _customMarker('Everywhere\nis a Widgets', Colors.blue),
+      ),
     ];
   }
 
@@ -74,9 +75,47 @@ class _ChangeAddressViewState extends State<ChangeAddressView> {
               fontSize: 20,
               fontWeight: FontWeight.w800),
         ),
+
+        // 👇 Cart Icon that listens to global cartCount
+        actions: [
+          ValueListenableBuilder<int>(
+            valueListenable: cartCount,
+            builder: (context, value, _) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.shopping_cart, color: TColor.primaryText),
+                    onPressed: () {
+                      // TODO: Navigate to Cart Page
+                    },
+                  ),
+                  if (value > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          "$value",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                ],
+              );
+            },
+          ),
+        ],
       ),
       body: CustomGoogleMapMarkerBuilder(
-        //screenshotDelay: const Duration(seconds: 4),
         customMarkers: _customMarkers,
         builder: (BuildContext context, Set<Marker>? markers) {
           if (markers == null) {
@@ -98,44 +137,64 @@ class _ChangeAddressViewState extends State<ChangeAddressView> {
         },
       ),
       bottomNavigationBar: BottomAppBar(
-          child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric( vertical: 15 , horizontal: 25),
-            child: RoundTextfield(
-              hintText: "Search Address",
-              left: Icon(Icons.search, color: TColor.primaryText),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric( horizontal: 25),
-            child: Row(children: [
-
-              Image.asset('assets/img/fav_icon.png', width: 35, height: 35 ), 
-
-              const SizedBox(width: 8,),
-
-              Expanded(
-                child: Text(
-                  "Choose a saved place",
-                  style: TextStyle(
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+                child: RoundTextfield(
+                  hintText: "Search Address",
+                  left: Icon(Icons.search, color: TColor.primaryText),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Row(
+                  children: [
+                    Image.asset('assets/img/fav_icon.png',
+                        width: 35, height: 35),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Choose a saved place",
+                        style: TextStyle(
+                            color: TColor.primaryText,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Image.asset(
+                      'assets/img/btn_next.png',
+                      width: 15,
+                      height: 15,
                       color: TColor.primaryText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
+                    )
+                  ],
                 ),
               ),
 
-              Image.asset('assets/img/btn_next.png', width: 15, height: 15, color: TColor.primaryText, )
-
-            ]),
+              // 🔹 Test button to simulate "Add to Cart"
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 25),
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Test adding a sample item to cart
+                    addToCart({
+                      "name": "Test Item",
+                      "price": "₱5.00",
+                      "image": "assets/img/offer_1.png"
+                    });
+                  },
+                  child: const Text("Add to Cart"),
+                ),
+              )
+            ],
           ),
-
-
-        ],
-      ))),
+        ),
+      ),
     );
   }
 }

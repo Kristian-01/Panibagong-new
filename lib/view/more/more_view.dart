@@ -5,6 +5,7 @@ import '../../view/more/payment_details_view.dart';
 
 import '../../common/color_extension.dart';
 import '../../common/service_call.dart';
+import '../../common_widget/cart_icon.dart';
 import 'my_order_view.dart';
 import 'notification_view.dart';
 
@@ -79,19 +80,7 @@ class _MoreViewState extends State<MoreView> {
                           fontSize: 20,
                           fontWeight: FontWeight.w800),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MyOrderView()));
-                      },
-                      icon: Image.asset(
-                        "assets/img/shopping_cart.png",
-                        width: 25,
-                        height: 25,
-                      ),
-                    ),
+                    const CartIcon(size: 25),
                   ],
                 ),
               ),
