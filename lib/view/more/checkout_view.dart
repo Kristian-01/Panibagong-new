@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
+import '../../common/globs.dart';
 
 import 'change_address_view.dart';
-import 'checkout_message_view.dart';
+import 'order_success_view.dart';
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView({super.key});
+  final List<Map<String, dynamic>> cartItems;
+  final double subtotal;
+  final double discount;
+  final String discountCode;
+  final double total;
+
+  const CheckoutView({
+    super.key,
+    required this.cartItems,
+    required this.subtotal,
+    required this.discount,
+    required this.discountCode,
+    required this.total,
+  });
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
@@ -20,6 +35,58 @@ class _CheckoutViewState extends State<CheckoutView> {
   ];
 
   int selectMethod = -1;
+  String _deliveryAddress = "653 Nostrand Ave.\nBrooklyn, NY 11216"; // Default address
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedAddress();
+  }
+
+  Future<void> _loadSavedAddress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedAddress = prefs.getString('user_address');
+      if (savedAddress != null && savedAddress.isNotEmpty) {
+        setState(() {
+          _deliveryAddress = savedAddress;
+        });
+      }
+    } catch (e) {
+      // Keep default address if loading fails
+      print('Error loading saved address: $e');
+    }
+  }
+
+  void _placeOrder() {
+    if (selectMethod == -1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a payment method"),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // Generate order ID
+    String orderId = "ORD${DateTime.now().millisecondsSinceEpoch}";
+
+    // Clear cart
+    cartItems.clear();
+
+    // Navigate to success page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderSuccessView(
+          orderId: orderId,
+          total: widget.total,
+          paymentMethod: paymentArr[selectMethod]["name"],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +147,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       children: [
                         Expanded(
                           child: Text(
-                            "653 Nostrand Ave.\nBrooklyn, NY 11216",
+                            _deliveryAddress,
                             style: TextStyle(
                                 color: TColor.primaryText,
                                 fontSize: 15,
@@ -91,13 +158,20 @@ class _CheckoutViewState extends State<CheckoutView> {
                           width: 4,
                         ),
                         TextButton(
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
                                       const ChangeAddressView()),
                             );
+
+                            // Update address if user selected a new one
+                            if (result != null && result is String) {
+                              setState(() {
+                                _deliveryAddress = result;
+                              });
+                            }
                           },
                           child: Text(
                             "Change",
@@ -229,7 +303,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          "\$68",
+                          "₱${widget.subtotal.toStringAsFixed(2)}",
                           style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 13,
@@ -252,7 +326,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          "\$2",
+                          "₱0.00",
                           style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 13,
@@ -260,29 +334,31 @@ class _CheckoutViewState extends State<CheckoutView> {
                         )
                       ],
                     ),
-                    const SizedBox(
-                      height: 8,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Discount",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: TColor.primaryText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "-\$4",
-                          style: TextStyle(
-                              color: TColor.primaryText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700),
-                        )
-                      ],
-                    ),
+                    if (widget.discount > 0) ...[
+                      const SizedBox(
+                        height: 8,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Discount (${widget.discountCode})",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500),
+                          ),
+                          Text(
+                            "-₱${widget.discount.toStringAsFixed(2)}",
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700),
+                          )
+                        ],
+                      ),
+                    ],
                     const SizedBox(
                       height: 15,
                     ),
@@ -305,7 +381,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          "\$66",
+                          "₱${widget.total.toStringAsFixed(2)}",
                           style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 15,
@@ -327,15 +403,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
                 child: RoundButton(
-                    title: "Send Order",
+                    title: "Place Order",
                     onPressed: () {
-                      showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          isScrollControlled: true,
-                          builder: (context) {
-                            return const CheckoutMessageView();
-                          });
+                      _placeOrder();
                     }),
               ),
             ],

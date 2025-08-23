@@ -161,15 +161,37 @@ class Globs {
 }
 
 class SVKey {
-  static const mainUrl = "http://10.0.2.2:3001";
+  // Laravel Backend Configuration
+  static const mainUrl = "http://192.168.1.6:8000"; // Laravel default port
   static const baseUrl = '$mainUrl/api/';
-  static const nodeUrl = mainUrl;
 
+  // Laravel API Endpoints
   static const svLogin = '${baseUrl}login';
-  static const svSignUp = '${baseUrl}sign_up';
-  static const svForgotPasswordRequest = '${baseUrl}forgot_password_request';
-  static const svForgotPasswordVerify = '${baseUrl}forgot_password_verify';
-  static const svForgotPasswordSetNew = '${baseUrl}forgot_password_set_new';
+  static const svSignUp = '${baseUrl}register';
+  static const svForgotPasswordRequest = '${baseUrl}forgot-password';
+  static const svForgotPasswordVerify = '${baseUrl}verify-otp';
+  static const svForgotPasswordSetNew = '${baseUrl}reset-password';
+
+  // Additional Laravel endpoints
+  static const svProfile = '${baseUrl}profile';
+  static const svUpdateProfile = '${baseUrl}profile/update';
+  static const svLogout = '${baseUrl}logout';
+
+  // Order Management endpoints
+  static const svOrders = '${baseUrl}orders';
+  static const svCreateOrder = '${baseUrl}orders';
+  static const svOrderDetails = '${baseUrl}orders/'; // append order ID
+  static const svCancelOrder = '${baseUrl}orders/'; // append order ID + /cancel
+  static const svReorder = '${baseUrl}orders/'; // append order ID + /reorder
+  static const svTrackOrder = '${baseUrl}orders/track/'; // append order number
+
+  // Product Catalog endpoints
+  static const svProducts = '${baseUrl}products';
+  static const svProductDetails = '${baseUrl}products/'; // append product ID
+  static const svFeaturedProducts = '${baseUrl}products/featured';
+  static const svProductsOnSale = '${baseUrl}products/on-sale';
+  static const svProductSuggestions = '${baseUrl}products/suggestions';
+  static const svCategories = '${baseUrl}categories';
 }
 
 class KKey {

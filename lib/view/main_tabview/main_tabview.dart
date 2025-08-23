@@ -3,10 +3,10 @@ import '../../common/color_extension.dart';
 import '../../common_widget/tab_button.dart';
 
 import '../home/home_view.dart';
-import '../menu/menu_view.dart';
 import '../more/more_view.dart';
-import '../offer/offer_view.dart';
+import '../orders/orders_view.dart';
 import '../profile/profile_view.dart';
+import '../products/product_catalog_view.dart';
 
 class MainTabView extends StatefulWidget {
   const MainTabView({super.key});
@@ -63,12 +63,12 @@ class _MainTabViewState extends State<MainTabView> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               TabButton(
-                  title: "Reorder",
-                  icon: "assets/img/tab_menu.png",
+                  title: "Orders",
+                  icon: "assets/img/tab_offer.png",
                   onTap: () {
                     if (selctTab != 0) {
                       selctTab = 0;
-                      selectPageView = const MenuView();
+                      selectPageView = const OrdersView();
                     }
                     if (mounted) {
                       setState(() {});
@@ -76,12 +76,12 @@ class _MainTabViewState extends State<MainTabView> {
                   },
                   isSelected: selctTab == 0),
               TabButton(
-                  title: "order",
-                  icon: "assets/img/tab_offer.png",
+                  title: "Products",
+                  icon: "assets/img/tab_menu.png",
                   onTap: () {
                     if (selctTab != 1) {
                       selctTab = 1;
-                      selectPageView = const OfferView();
+                      selectPageView = const ProductCatalogView();
                     }
                     if (mounted) {
                       setState(() {});

@@ -3,13 +3,13 @@ import '/common/color_extension.dart';
 import '/common_widget/round_textfield.dart';
 
 import '../../common/globs.dart';
-import '../../common/service_call.dart';
 import '../../common_widget/category_cell.dart';
 import '../../common_widget/most_popular_cell.dart';
 import '../../common_widget/popular_resutaurant_row.dart';
 import '../../common_widget/recent_item_row.dart';
 import '../../common_widget/view_all_title_row.dart';
 import '../../common_widget/cart_icon.dart';
+import 'location_selection_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -22,6 +22,7 @@ class _HomeViewState extends State<HomeView> {
   TextEditingController txtSearch = TextEditingController();
   bool isSearching = false;
   List searchResults = [];
+  String currentAddress = "Current Location";
 
   List catArr = [
     {"image": "assets/img/med.png", "name": "Medicines"},
@@ -39,15 +40,15 @@ class _HomeViewState extends State<HomeView> {
     },
     {
       "image": "assets/img/res_2.png",
-      "name": "Café de Noir",
-      "price": "₱5.00",
-      "description": "For headache and fever relief"
+      "name": "Pagkain ni Mang Kanor",
+      "price": "₱50.00",
+      "description": "Unang kagat kiss ka agad"
     },
     {
       "image": "assets/img/res_3.png",
-      "name": "Bakes by Tella",
+      "name": "Tinapay ni Aling Bebang",
       "price": "₱5.00",
-      "description": "For headache and fever relief"
+      "description": "Masarap Puro harina"
     },
   ];
 
@@ -180,14 +181,18 @@ class _HomeViewState extends State<HomeView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "Nine27 Pharmacy ${ServiceCall.userPayload[KKey.name] ?? ""}",
-                      style: TextStyle(
-                        color: TColor.primaryText,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
+                    Expanded(
+                      child: Text(
+                        "Nine27 Pharmacy",
+                        style: TextStyle(
+                          color: TColor.primaryText,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 10),
                     // ✅ Cart Icon with Counter Badge
                     const CartIcon(size: 28),
                   ],
@@ -205,17 +210,51 @@ class _HomeViewState extends State<HomeView> {
                         style: TextStyle(
                             color: TColor.secondaryText, fontSize: 11)),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Text("Current Location",
-                            style: TextStyle(
-                                color: TColor.secondaryText,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700)),
-                        const SizedBox(width: 25),
-                        Image.asset("assets/img/dropdown.png",
-                            width: 12, height: 12),
-                      ],
+                    GestureDetector(
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LocationSelectionView(),
+                          ),
+                        );
+                        if (result != null && result is String) {
+                          setState(() {
+                            currentAddress = result;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: TColor.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: TColor.primary.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: TColor.primary,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(currentAddress,
+                                  style: TextStyle(
+                                      color: TColor.primaryText,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700)),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              color: TColor.primary,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
                     )
                   ],
                 ),

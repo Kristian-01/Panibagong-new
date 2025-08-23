@@ -10,6 +10,8 @@ class RoundTextfield extends StatelessWidget {
   final Color? bgColor;
   final Widget? left;
   final Widget? right;
+  final int? maxLines;
+  final Function(String)? onSubmitted;
 
   const RoundTextfield(
       {super.key,
@@ -19,6 +21,8 @@ class RoundTextfield extends StatelessWidget {
       this.bgColor,
       this.left,
       this.right,
+      this.maxLines,
+      this.onSubmitted,
       this.obscureText = false});
 
   @override
@@ -42,6 +46,8 @@ class RoundTextfield extends StatelessWidget {
               controller: controller,
               obscureText: obscureText,
               keyboardType: keyboardType,
+              maxLines: maxLines ?? 1,
+              onSubmitted: onSubmitted,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 enabledBorder: InputBorder.none,
@@ -71,6 +77,7 @@ class RoundTitleTextfield extends StatelessWidget {
   final String hintText;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final bool readOnly;
   final Color? bgColor;
   final Widget? left;
 
@@ -82,7 +89,8 @@ class RoundTitleTextfield extends StatelessWidget {
       this.keyboardType,
       this.bgColor,
       this.left,
-      this.obscureText = false});
+      this.obscureText = false,
+      this.readOnly = false});
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +120,7 @@ class RoundTitleTextfield extends StatelessWidget {
                     controller: controller,
                     obscureText: obscureText,
                     keyboardType: keyboardType,
+                    readOnly: readOnly,
                     decoration: InputDecoration(
                       contentPadding:
                           const EdgeInsets.symmetric(horizontal: 20),

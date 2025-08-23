@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
 import '../../common_widget/cart_icon.dart';
-import 'menu_items_view.dart';
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -13,26 +12,61 @@ class MenuView extends StatefulWidget {
 }
 
 class _MenuViewState extends State<MenuView> {
-  List menuArr = [
+  List prescriptionActions = [
     {
-      "name": "Medicines",
+      "name": "Upload Prescription",
       "image": "assets/img/menu_1.png",
-      "items_count": "120",
+      "description": "Take photo or upload prescription",
+      "icon": Icons.camera_alt,
+      "color": Colors.blue,
     },
     {
-      "name": "Vitamins",
+      "name": "My Prescriptions",
       "image": "assets/img/menu_2.png",
-      "items_count": "220",
+      "description": "View and manage prescriptions",
+      "icon": Icons.receipt_long,
+      "color": Colors.green,
     },
     {
-      "name": "Health Devices",
+      "name": "Prescription History",
       "image": "assets/img/menu_3.png",
-      "items_count": "155",
+      "description": "Past prescriptions and refills",
+      "icon": Icons.history,
+      "color": Colors.orange,
     },
     {
-      "name": "Promotions",
+      "name": "Doctor Consultations",
       "image": "assets/img/menu_4.png",
-      "items_count": "25",
+      "description": "Online doctor consultations",
+      "icon": Icons.video_call,
+      "color": Colors.purple,
+    },
+  ];
+
+  List recentPrescriptions = [
+    {
+      "id": "RX001",
+      "doctor": "Dr. Maria Santos",
+      "date": "Dec 22, 2024",
+      "status": "Ready for Pickup",
+      "medicines": ["Amoxicillin 500mg", "Paracetamol 500mg"],
+      "statusColor": Colors.green,
+    },
+    {
+      "id": "RX002",
+      "doctor": "Dr. Juan Cruz",
+      "date": "Dec 20, 2024",
+      "status": "Processing",
+      "medicines": ["Metformin 850mg", "Losartan 50mg"],
+      "statusColor": Colors.orange,
+    },
+    {
+      "id": "RX003",
+      "doctor": "Dr. Ana Reyes",
+      "date": "Dec 18, 2024",
+      "status": "Completed",
+      "medicines": ["Vitamin D3", "Calcium Carbonate"],
+      "statusColor": Colors.blue,
     },
   ];
   TextEditingController txtSearch = TextEditingController();
@@ -69,7 +103,7 @@ class _MenuViewState extends State<MenuView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Reorder",
+                          "Prescriptions",
                           style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 20,
@@ -85,7 +119,7 @@ class _MenuViewState extends State<MenuView> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: RoundTextfield(
-                      hintText: "Search Food",
+                      hintText: "Search Medicines",
                       controller: txtSearch,
                       left: Container(
                         alignment: Alignment.center,
@@ -99,118 +133,343 @@ class _MenuViewState extends State<MenuView> {
                     ),
                   ),
                   const SizedBox(
-                    height: 30,
+                    height: 20,
                   ),
-                  ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 30, horizontal: 20),
+                  // Quick Actions Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Quick Actions",
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  // Action Cards Grid
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      itemCount: menuArr.length,
-                      itemBuilder: ((context, index) {
-                        var mObj = menuArr[index] as Map? ?? {};
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MenuItemsView(
-                                  mObj: mObj,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Stack(
-                            alignment: Alignment.centerRight,
-                            children: [
-                              Container(
-                                margin: const EdgeInsets.only(
-                                    top: 8, bottom: 8, right: 20),
-                                width: media.width - 100,
-                                height: 90,
-                                decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(25),
-                                        bottomLeft: Radius.circular(25),
-                                        topRight: Radius.circular(10),
-                                        bottomRight: Radius.circular(10)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.black12,
-                                          blurRadius: 7,
-                                          offset: Offset(0, 4))
-                                    ]),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Image.asset(
-                                    mObj["image"].toString(),
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  const SizedBox(
-                                    width: 15,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          mObj["name"].toString(),
-                                          style: TextStyle(
-                                              color: TColor.primaryText,
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w700),
-                                        ),
-                                        const SizedBox(
-                                          height: 4,
-                                        ),
-                                        Text(
-                                          "${mObj["items_count"].toString()} items",
-                                          style: TextStyle(
-                                              color: TColor.secondaryText,
-                                              fontSize: 11),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 35,
-                                    height: 35,
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(17.5),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                              color: Colors.black12,
-                                              blurRadius: 4,
-                                              offset: Offset(0, 2))
-                                        ]),
-                                    alignment: Alignment.center,
-                                    child: Image.asset(
-                                      "assets/img/btn_next.png",
-                                      width: 15,
-                                      height: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                        childAspectRatio: 1.4,
+                      ),
+                      itemCount: prescriptionActions.length,
+                      itemBuilder: (context, index) {
+                        var action = prescriptionActions[index] as Map? ?? {};
+                        return _buildActionCard(action);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  // Recent Prescriptions Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Recent Prescriptions",
+                          style: TextStyle(
+                            color: TColor.primaryText,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
-                        );
-                      }))
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // Navigate to all prescriptions
+                          },
+                          child: Text(
+                            "View All",
+                            style: TextStyle(
+                              color: TColor.primary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Recent Prescriptions List
+                  ListView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: recentPrescriptions.length,
+                    itemBuilder: (context, index) {
+                      var prescription = recentPrescriptions[index] as Map? ?? {};
+                      return _buildPrescriptionCard(prescription);
+                    },
+                  )
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionCard(Map action) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            _handleActionTap(action["name"]);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 45,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: (action["color"] as Color).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Icon(
+                    action["icon"] as IconData,
+                    color: action["color"] as Color,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  action["name"],
+                  style: TextStyle(
+                    color: TColor.primaryText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  action["description"],
+                  style: TextStyle(
+                    color: TColor.secondaryText,
+                    fontSize: 9,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrescriptionCard(Map prescription) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Navigate to prescription details
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Prescription ${prescription["id"]}",
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (prescription["statusColor"] as Color).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        prescription["status"],
+                        style: TextStyle(
+                          color: prescription["statusColor"] as Color,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      color: TColor.secondaryText,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      prescription["doctor"],
+                      style: TextStyle(
+                        color: TColor.secondaryText,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.calendar_today,
+                      color: TColor.secondaryText,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      prescription["date"],
+                      style: TextStyle(
+                        color: TColor.secondaryText,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Medicines:",
+                  style: TextStyle(
+                    color: TColor.primaryText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...((prescription["medicines"] as List).map((medicine) =>
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 2),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: TColor.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          medicine,
+                          style: TextStyle(
+                            color: TColor.secondaryText,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleActionTap(String actionName) {
+    switch (actionName) {
+      case "Upload Prescription":
+        // Handle prescription upload
+        _showUploadDialog();
+        break;
+      case "My Prescriptions":
+        // Navigate to prescriptions list
+        break;
+      case "Prescription History":
+        // Navigate to prescription history
+        break;
+      case "Doctor Consultations":
+        // Navigate to consultations
+        break;
+    }
+  }
+
+  void _showUploadDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Upload Prescription",
+            style: TextStyle(
+              color: TColor.primaryText,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera_alt, color: TColor.primary),
+                title: const Text("Take Photo"),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Handle camera
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library, color: TColor.primary),
+                title: const Text("Choose from Gallery"),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Handle gallery
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

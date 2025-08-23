@@ -96,18 +96,22 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
     ServiceCall.post(parameter, SVKey.svForgotPasswordRequest,
         withSuccess: (responseObj) async {
       Globs.hideHUD();
-      if (responseObj[KKey.status] == "1") {
-        
-        Navigator.push(context, MaterialPageRoute(builder: (context) => OTPView(email: txtEmail.text) ) );
 
-        
+      // Laravel forgot password response
+      if (responseObj['success'] == true || responseObj['status'] == 'success') {
+        String message = responseObj['message'] ?? 'Password reset link sent to your email.';
+        mdShowAlert(Globs.appName, message, () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => OTPView(email: txtEmail.text)));
+        });
       } else {
-        mdShowAlert(Globs.appName,
-            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+        String errorMessage = responseObj['message'] ??
+                             responseObj['error'] ??
+                             'Failed to send reset email. Please try again.';
+        mdShowAlert(Globs.appName, errorMessage, () {});
       }
     }, failure: (err) async {
       Globs.hideHUD();
-      mdShowAlert(Globs.appName, err.toString(), () {});
+      mdShowAlert(Globs.appName, 'Network error: ${err.toString()}', () {});
     });
   }
 }

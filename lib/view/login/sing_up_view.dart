@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common/extension.dart';
@@ -152,56 +150,96 @@ class _SignUpViewState extends State<SignUpView> {
 
   //TODO: Action
   
-    void btnSignUp() {
-  if (!txtEmail.text.isEmail) {
-    mdShowAlert(Globs.appName, MSG.enterEmail, () {});
-    return;
-  }
+  void btnSignUp() {
+    if (txtName.text.trim().isEmpty) {
+      mdShowAlert(Globs.appName, "Please enter your name", () {});
+      return;
+    }
 
-  if (txtPassword.text.length < 6) {
-    mdShowAlert(Globs.appName, MSG.enterPassword, () {});
-    return;
-  }
+    if (!txtEmail.text.isEmail) {
+      mdShowAlert(Globs.appName, MSG.enterEmail, () {});
+      return;
+    }
+
+    if (txtMobile.text.trim().isEmpty) {
+      mdShowAlert(Globs.appName, "Please enter your mobile number", () {});
+      return;
+    }
+
+    if (txtAddress.text.trim().isEmpty) {
+      mdShowAlert(Globs.appName, "Please enter your address", () {});
+      return;
+    }
+
+    if (txtPassword.text.length < 6) {
+      mdShowAlert(Globs.appName, MSG.enterPassword, () {});
+      return;
+    }
+
+    if (txtPassword.text != txtConfirmPassword.text) {
+      mdShowAlert(Globs.appName, "Passwords do not match", () {});
+      return;
+    }
 
     endEditing();
 
+    // Laravel registration API call
     serviceCallSignUp({
-      "name": txtName.text,
-
-      "mobile": txtMobile.text,
-      "email": txtEmail.text,
-      "address": txtAddress.text,
+      "name": txtName.text.trim(),
+      "email": txtEmail.text.trim(),
+      "mobile": txtMobile.text.trim(),
+      "address": txtAddress.text.trim(),
       "password": txtPassword.text,
-      "push_token": "",
-      "device_type": Platform.isAndroid ? "A" : "I"
+      "password_confirmation": txtConfirmPassword.text,
     });
   }
 
-  //TODO: ServiceCall
-
+  // Laravel API Registration Service Call
   void serviceCallSignUp(Map<String, dynamic> parameter) {
     Globs.showHUD();
 
     ServiceCall.post(parameter, SVKey.svSignUp,
         withSuccess: (responseObj) async {
       Globs.hideHUD();
-      if (responseObj[KKey.status] == "1") {
-        Globs.udSet(responseObj[KKey.payload] as Map? ?? {}, Globs.userPayload);
+
+      // Laravel typically returns success with user data and token
+      if (responseObj['success'] == true || responseObj['status'] == 'success') {
+        // Store user data and token
+        Map<String, dynamic> userData = {};
+
+        if (responseObj['user'] != null) {
+          userData = responseObj['user'] as Map<String, dynamic>;
+        }
+
+        if (responseObj['token'] != null || responseObj['access_token'] != null) {
+          userData['token'] = responseObj['token'] ?? responseObj['access_token'];
+        }
+
+        // Store user payload and login status
+        Globs.udSet(userData, Globs.userPayload);
         Globs.udBoolSet(true, Globs.userLogin);
-        
-        Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const OnBoardingView(),
-            ),
-            (route) => false);
+        ServiceCall.userPayload = userData;
+
+        // Show success message
+        mdShowAlert(Globs.appName, "Registration successful! Welcome to Nine27 Pharmacy.", () {
+          // Navigate to main app
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const OnBoardingView(),
+              ),
+              (route) => false);
+        });
       } else {
-        mdShowAlert(Globs.appName,
-            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+        // Handle registration failure
+        String errorMessage = responseObj['message'] ??
+                             responseObj['error'] ??
+                             'Registration failed. Please try again.';
+        mdShowAlert(Globs.appName, errorMessage, () {});
       }
     }, failure: (err) async {
       Globs.hideHUD();
-      mdShowAlert(Globs.appName, err.toString(), () {});
+      mdShowAlert(Globs.appName, 'Network error: ${err.toString()}', () {});
     });
   }
 }

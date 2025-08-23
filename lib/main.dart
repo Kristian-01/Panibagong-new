@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'common/globs.dart';
 import 'common/my_http_overrides.dart';
+import 'services/cart_service.dart';
+import 'services/notification_service.dart';
 
 SharedPreferences? prefs;
 void main() async {
@@ -22,6 +24,10 @@ void main() async {
   if(Globs.udValueBool(Globs.userLogin)) {
     ServiceCall.userPayload = Globs.udValue(Globs.userPayload);
   }
+
+  // Initialize services
+  await CartService.initialize();
+  await NotificationService.initialize();
 
   runApp( const MyApp(defaultHome:  StartupView(),));
 }

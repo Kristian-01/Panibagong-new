@@ -18,6 +18,7 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   final ImagePicker picker = ImagePicker();
   XFile? image;
+  bool isEditMode = false;
 
   TextEditingController txtName = TextEditingController();
   TextEditingController txtEmail = TextEditingController();
@@ -25,6 +26,16 @@ class _ProfileViewState extends State<ProfileView> {
   TextEditingController txtAddress = TextEditingController();
   TextEditingController txtPassword = TextEditingController();
   TextEditingController txtConfirmPassword = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with sample data
+    txtName.text = "Emilia Rodriguez";
+    txtEmail.text = "emilia.rodriguez@email.com";
+    txtMobile.text = "+63 912 345 6789";
+    txtAddress.text = "123 Makati Ave, Makati City, Metro Manila";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +59,44 @@ class _ProfileViewState extends State<ProfileView> {
                       fontSize: 20,
                       fontWeight: FontWeight.w800),
                 ),
-                const CartIcon(size: 25),
+                Row(
+                  children: [
+                    if (!isEditMode)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isEditMode = true;
+                          });
+                        },
+                        child: Text(
+                          "Edit",
+                          style: TextStyle(
+                            color: TColor.primary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    if (isEditMode)
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            isEditMode = false;
+                          });
+                        },
+                        child: Text(
+                          "Cancel",
+                          style: TextStyle(
+                            color: TColor.secondaryText,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 8),
+                    const CartIcon(size: 25),
+                  ],
+                ),
               ],
             ),
           ),
@@ -75,21 +123,22 @@ class _ProfileViewState extends State<ProfileView> {
                     color: TColor.secondaryText,
                   ),
           ),
-          TextButton.icon(
-            onPressed: () async {
-              image = await picker.pickImage(source: ImageSource.gallery);
-              setState(() {});
-            },
-            icon: Icon(
-              Icons.edit,
-              color: TColor.primary,
-              size: 12,
+          if (isEditMode)
+            TextButton.icon(
+              onPressed: () async {
+                image = await picker.pickImage(source: ImageSource.gallery);
+                setState(() {});
+              },
+              icon: Icon(
+                Icons.camera_alt,
+                color: TColor.primary,
+                size: 12,
+              ),
+              label: Text(
+                "Change Photo",
+                style: TextStyle(color: TColor.primary, fontSize: 12),
+              ),
             ),
-            label: Text(
-              "Edit Profile",
-              style: TextStyle(color: TColor.primary, fontSize: 12),
-            ),
-          ),
           Text(
             "Hi there Emilia!",
             style: TextStyle(
@@ -116,6 +165,7 @@ class _ProfileViewState extends State<ProfileView> {
               title: "Name",
               hintText: "Enter Name",
               controller: txtName,
+              readOnly: !isEditMode,
             ),
           ),
           Padding(
@@ -125,6 +175,7 @@ class _ProfileViewState extends State<ProfileView> {
               hintText: "Enter Email",
               keyboardType: TextInputType.emailAddress,
               controller: txtEmail,
+              readOnly: !isEditMode,
             ),
           ),
           Padding(
@@ -134,6 +185,7 @@ class _ProfileViewState extends State<ProfileView> {
               hintText: "Enter Mobile No",
               controller: txtMobile,
               keyboardType: TextInputType.phone,
+              readOnly: !isEditMode,
             ),
           ),
           Padding(
@@ -142,33 +194,64 @@ class _ProfileViewState extends State<ProfileView> {
               title: "Address",
               hintText: "Enter Address",
               controller: txtAddress,
+              readOnly: !isEditMode,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-            child: RoundTitleTextfield(
-              title: "Password",
-              hintText: "* * * * * *",
-              obscureText: true,
-              controller: txtPassword,
+          if (isEditMode) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              child: RoundTitleTextfield(
+                title: "Password",
+                hintText: "* * * * * *",
+                obscureText: true,
+                controller: txtPassword,
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-            child: RoundTitleTextfield(
-              title: "Confirm Password",
-              hintText: "* * * * * *",
-              obscureText: true,
-              controller: txtConfirmPassword,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+              child: RoundTitleTextfield(
+                title: "Confirm Password",
+                hintText: "* * * * * *",
+                obscureText: true,
+                controller: txtConfirmPassword,
+              ),
             ),
-          ),
+          ],
           const SizedBox(
             height: 20,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: RoundButton(title: "Save", onPressed: () {}),
-          ),
+          if (isEditMode)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: RoundButton(
+                title: "Save Changes",
+                onPressed: () {
+                  // Validate and save changes
+                  if (txtPassword.text.isNotEmpty &&
+                      txtPassword.text != txtConfirmPassword.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Passwords do not match"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Save changes (in a real app, this would save to a database)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Profile updated successfully!"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+
+                  setState(() {
+                    isEditMode = false;
+                  });
+                }
+              ),
+            ),
           const SizedBox(
             height: 20,
           ),

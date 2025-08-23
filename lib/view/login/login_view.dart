@@ -161,51 +161,68 @@ class _LoginViewState extends State<LoginView> {
 
   
   void btnLogin() {
-  if (!txtEmail.text.isEmail) {
-    mdShowAlert(Globs.appName, MSG.enterEmail, () {});
-    return;
+    if (!txtEmail.text.isEmail) {
+      mdShowAlert(Globs.appName, MSG.enterEmail, () {});
+      return;
+    }
+
+    if (txtPassword.text.length < 6) {
+      mdShowAlert(Globs.appName, MSG.enterPassword, () {});
+      return;
+    }
+
+    endEditing();
+
+    // Call Laravel API for login
+    serviceCallLogin({
+      "email": txtEmail.text.trim(),
+      "password": txtPassword.text,
+    });
   }
 
-  if (txtPassword.text.length < 6) {
-    mdShowAlert(Globs.appName, MSG.enterPassword, () {});
-    return;
-  }
 
-  endEditing();
-
-  // MOCK LOGIN - Skip actual API call
-  Globs.udBoolSet(true, Globs.userLogin);
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (context) => const OnBoardingView()),
-    (route) => false,
-  );
-}
-
-
-  //TODO: ServiceCall
-
+  // Laravel API Login Service Call
   void serviceCallLogin(Map<String, dynamic> parameter) {
     Globs.showHUD();
 
     ServiceCall.post(parameter, SVKey.svLogin,
         withSuccess: (responseObj) async {
       Globs.hideHUD();
-      if (responseObj[KKey.status] == "1") {
-        
-        Globs.udSet( responseObj[KKey.payload] as Map? ?? {} , Globs.userPayload);
-        Globs.udBoolSet(true, Globs.userLogin);
 
-          Navigator.pushAndRemoveUntil(context,  MaterialPageRoute(
-            builder: (context) => const OnBoardingView(),
-          ), (route) => false);
+      // Laravel typically returns success with user data and token
+      if (responseObj['success'] == true || responseObj['status'] == 'success') {
+        // Store user data and token
+        Map<String, dynamic> userData = {};
+
+        if (responseObj['user'] != null) {
+          userData = responseObj['user'] as Map<String, dynamic>;
+        }
+
+        if (responseObj['token'] != null || responseObj['access_token'] != null) {
+          userData['token'] = responseObj['token'] ?? responseObj['access_token'];
+        }
+
+        // Store user payload and login status
+        Globs.udSet(userData, Globs.userPayload);
+        Globs.udBoolSet(true, Globs.userLogin);
+        ServiceCall.userPayload = userData;
+
+        // Navigate to main app
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const OnBoardingView()),
+          (route) => false,
+        );
       } else {
-        mdShowAlert(Globs.appName,
-            responseObj[KKey.message] as String? ?? MSG.fail, () {});
+        // Handle login failure
+        String errorMessage = responseObj['message'] ??
+                             responseObj['error'] ??
+                             'Login failed. Please check your credentials.';
+        mdShowAlert(Globs.appName, errorMessage, () {});
       }
     }, failure: (err) async {
       Globs.hideHUD();
-      mdShowAlert(Globs.appName, err.toString(), () {});
+      mdShowAlert(Globs.appName, 'Network error: ${err.toString()}', () {});
     });
   }
 }
