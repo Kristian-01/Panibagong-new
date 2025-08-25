@@ -180,7 +180,6 @@ class _LoginViewState extends State<LoginView> {
     });
   }
 
-
   // Laravel API Login Service Call
   void serviceCallLogin(Map<String, dynamic> parameter) {
     Globs.showHUD();

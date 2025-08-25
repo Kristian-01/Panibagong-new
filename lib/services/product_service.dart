@@ -12,47 +12,32 @@ class ProductService {
     int limit = 20,
   }) async {
     try {
-      Map<String, dynamic> parameters = {
-        'page': page,
-        'limit': limit,
-      };
-
+      // Use mock data for now to avoid connection issues
+      final mockProducts = MockProductService.getMockProducts();
+      
+      List<ProductModel> filteredProducts = mockProducts;
+      
+      // Apply search filter
       if (search != null && search.isNotEmpty) {
-        parameters['search'] = search;
+        filteredProducts = mockProducts.where((product) {
+          return product.name.toLowerCase().contains(search.toLowerCase()) ||
+                 product.description.toLowerCase().contains(search.toLowerCase()) ||
+                 (product.brand ?? "").toLowerCase().contains(search.toLowerCase());
+        }).toList();
       }
-
-      if (filters != null) {
-        parameters.addAll(filters.toQueryParams());
+      
+      // Apply category filter
+      if (filters?.category != null) {
+        filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
       }
-
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}products',
-        parameters,
-        isToken: false, // Products can be viewed without authentication
-      );
-
-      if (response['success'] == true) {
-        List<ProductModel> products = [];
-        if (response['products'] != null) {
-          products = (response['products'] as List)
-              .map((productJson) => ProductModel.fromJson(productJson))
-              .toList();
-        }
-
-        return {
-          'success': true,
-          'products': products,
-          'total': response['total'] ?? 0,
-          'currentPage': response['current_page'] ?? 1,
-          'totalPages': response['total_pages'] ?? 1,
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response['message'] ?? 'Failed to fetch products',
-          'products': <ProductModel>[],
-        };
-      }
+      
+      return {
+        'success': true,
+        'products': filteredProducts,
+        'total': filteredProducts.length,
+        'currentPage': 1,
+        'totalPages': 1,
+      };
     } catch (e) {
       return {
         'success': false,
@@ -65,29 +50,17 @@ class ProductService {
   // Get product details by ID
   static Future<Map<String, dynamic>> getProductDetails(int productId) async {
     try {
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}products/$productId',
-        {},
-        isToken: false,
-        method: 'GET',
-      );
-
-      if (response['success'] == true && response['product'] != null) {
-        ProductModel product = ProductModel.fromJson(response['product']);
-        return {
-          'success': true,
-          'product': product,
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response['message'] ?? 'Product not found',
-        };
-      }
+      final mockProducts = MockProductService.getMockProducts();
+      final product = mockProducts.firstWhere((p) => p.id == productId);
+      
+      return {
+        'success': true,
+        'product': product,
+      };
     } catch (e) {
       return {
         'success': false,
-        'message': 'Network error: ${e.toString()}',
+        'message': 'Product not found',
       };
     }
   }
@@ -131,31 +104,13 @@ class ProductService {
     int limit = 10,
   }) async {
     try {
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}products/featured',
-        {'limit': limit},
-        isToken: false,
-      );
-
-      if (response['success'] == true) {
-        List<ProductModel> products = [];
-        if (response['products'] != null) {
-          products = (response['products'] as List)
-              .map((productJson) => ProductModel.fromJson(productJson))
-              .toList();
-        }
-
-        return {
-          'success': true,
-          'products': products,
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response['message'] ?? 'Failed to fetch featured products',
-          'products': <ProductModel>[],
-        };
-      }
+      final mockProducts = MockProductService.getMockProducts();
+      final featured = mockProducts.where((p) => (p.rating ?? 0) >= 4.0).take(limit).toList();
+      
+      return {
+        'success': true,
+        'products': featured,
+      };
     } catch (e) {
       return {
         'success': false,
@@ -168,31 +123,12 @@ class ProductService {
   // Get product categories
   static Future<Map<String, dynamic>> getCategories() async {
     try {
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}categories',
-        {},
-        isToken: false,
-      );
-
-      if (response['success'] == true) {
-        List<ProductCategory> categories = [];
-        if (response['categories'] != null) {
-          categories = (response['categories'] as List)
-              .map((categoryJson) => ProductCategory.fromJson(categoryJson))
-              .toList();
-        }
-
-        return {
-          'success': true,
-          'categories': categories,
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response['message'] ?? 'Failed to fetch categories',
-          'categories': <ProductCategory>[],
-        };
-      }
+      final categories = ProductCategories.getCategories();
+      
+      return {
+        'success': true,
+        'categories': categories,
+      };
     } catch (e) {
       return {
         'success': false,
@@ -201,119 +137,17 @@ class ProductService {
       };
     }
   }
-
-  // Get popular products
-  static Future<Map<String, dynamic>> getPopularProducts({
-    int limit = 10,
-  }) async {
-    final filters = ProductFilters(sortBy: 'rating_desc');
-    
-    return getProducts(
-      filters: filters,
-      limit: limit,
-    );
-  }
-
-  // Get products on sale
-  static Future<Map<String, dynamic>> getProductsOnSale({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}products/on-sale',
-        {
-          'page': page,
-          'limit': limit,
-        },
-        isToken: false,
-      );
-
-      if (response['success'] == true) {
-        List<ProductModel> products = [];
-        if (response['products'] != null) {
-          products = (response['products'] as List)
-              .map((productJson) => ProductModel.fromJson(productJson))
-              .toList();
-        }
-
-        return {
-          'success': true,
-          'products': products,
-          'total': response['total'] ?? 0,
-          'currentPage': response['current_page'] ?? 1,
-          'totalPages': response['total_pages'] ?? 1,
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response['message'] ?? 'Failed to fetch sale products',
-          'products': <ProductModel>[],
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-        'products': <ProductModel>[],
-      };
-    }
-  }
-
-  // Get product suggestions based on search
-  static Future<List<String>> getSearchSuggestions(String query) async {
-    if (query.length < 2) return [];
-
-    try {
-      final response = await _makeApiCall(
-        '${SVKey.baseUrl}products/suggestions',
-        {'query': query},
-        isToken: false,
-      );
-
-      if (response['success'] == true && response['suggestions'] != null) {
-        return List<String>.from(response['suggestions']);
-      }
-    } catch (e) {
-      // Ignore errors for suggestions
-    }
-
-    return [];
-  }
-
-  // Helper method to make API calls
-  static Future<Map<String, dynamic>> _makeApiCall(
-    String url,
-    Map<String, dynamic> parameters, {
-    bool isToken = false,
-    String method = 'POST',
-  }) async {
-    final completer = Completer<Map<String, dynamic>>();
-
-    ServiceCall.post(parameters, url, isToken: isToken,
-      withSuccess: (responseObj) async {
-        completer.complete(responseObj);
-      },
-      failure: (err) async {
-        completer.complete({
-          'success': false,
-          'message': err.toString(),
-        });
-      }
-    );
-
-    return completer.future;
-  }
 }
 
-// Mock data for testing (remove when backend is ready)
+// Enhanced mock data with more products
 class MockProductService {
   static List<ProductModel> getMockProducts() {
     return [
+      // Medicines
       ProductModel(
         id: 1,
         name: 'Biogesic 500mg',
-        description: 'Paracetamol 500mg tablet for fever and pain relief. Fast-acting formula for headaches, muscle pain, and fever reduction.',
+        description: 'Paracetamol 500mg tablet for fever and pain relief',
         price: 50.00,
         image: 'assets/img/biogesic.jpg',
         category: 'medicines',
@@ -333,8 +167,94 @@ class MockProductService {
       ),
       ProductModel(
         id: 2,
+        name: 'Advil 200mg',
+        description: 'Ibuprofen tablets for pain relief and inflammation',
+        price: 75.00,
+        image: 'assets/img/advil.jpg',
+        category: 'medicines',
+        brand: 'Pfizer',
+        sku: 'ADV-200-20',
+        stockQuantity: 120,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '200mg',
+        activeIngredient: 'Ibuprofen',
+        manufacturer: 'Pfizer',
+        rating: 4.4,
+        reviewCount: 95,
+        tags: ['pain relief', 'inflammation', 'fever'],
+        createdAt: DateTime.now().subtract(const Duration(days: 25)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 3,
+        name: 'Tylenol 500mg',
+        description: 'Acetaminophen tablets for fever and pain relief',
+        price: 65.00,
+        image: 'assets/img/tylenol.jpg',
+        category: 'medicines',
+        brand: 'Johnson & Johnson',
+        sku: 'TYL-500-24',
+        stockQuantity: 80,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '500mg',
+        activeIngredient: 'Acetaminophen',
+        manufacturer: 'Johnson & Johnson',
+        rating: 4.6,
+        reviewCount: 142,
+        tags: ['pain relief', 'fever', 'safe'],
+        createdAt: DateTime.now().subtract(const Duration(days: 20)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 4,
+        name: 'Aspirin 325mg',
+        description: 'Low-dose aspirin for heart health and pain relief',
+        price: 35.00,
+        image: 'assets/img/aspirin.jpg',
+        category: 'medicines',
+        brand: 'Bayer',
+        sku: 'ASP-325-100',
+        stockQuantity: 200,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '325mg',
+        activeIngredient: 'Acetylsalicylic Acid',
+        manufacturer: 'Bayer',
+        rating: 4.3,
+        reviewCount: 78,
+        tags: ['heart health', 'pain relief', 'blood thinner'],
+        createdAt: DateTime.now().subtract(const Duration(days: 15)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 5,
+        name: 'Mefenamic Acid 500mg',
+        description: 'Anti-inflammatory medicine for pain and fever',
+        price: 45.00,
+        image: 'assets/img/mefenamic.jpg',
+        category: 'medicines',
+        brand: 'Generics',
+        sku: 'MEF-500-10',
+        stockQuantity: 90,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '500mg',
+        activeIngredient: 'Mefenamic Acid',
+        manufacturer: 'Generics Pharmacy',
+        rating: 4.2,
+        reviewCount: 67,
+        tags: ['pain relief', 'inflammation', 'menstrual pain'],
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        updatedAt: DateTime.now(),
+      ),
+
+      // Vitamins
+      ProductModel(
+        id: 6,
         name: 'Vitamin C 500mg',
-        description: 'High-potency Vitamin C supplement for immune system support. Helps boost immunity and fight infections.',
+        description: 'High-potency Vitamin C supplement for immune system support',
         price: 15.00,
         image: 'assets/img/vitamin-c.jpg',
         category: 'vitamins',
@@ -353,9 +273,89 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 3,
+        id: 7,
+        name: 'Multivitamins Complete',
+        description: 'Complete daily multivitamin with minerals',
+        price: 450.00,
+        image: 'assets/img/multivitamins.jpg',
+        category: 'vitamins',
+        brand: 'Centrum',
+        sku: 'MUL-COM-30',
+        stockQuantity: 60,
+        isAvailable: true,
+        requiresPrescription: false,
+        manufacturer: 'Pfizer',
+        rating: 4.5,
+        reviewCount: 203,
+        tags: ['multivitamin', 'daily nutrition', 'minerals'],
+        createdAt: DateTime.now().subtract(const Duration(days: 20)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 8,
+        name: 'Vitamin D3 1000IU',
+        description: 'High-potency Vitamin D3 for bone health',
+        price: 320.00,
+        image: 'assets/img/vitamin-d3.jpg',
+        category: 'vitamins',
+        brand: 'Nature Made',
+        sku: 'VIT-D3-1000-60',
+        stockQuantity: 90,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '1000IU',
+        activeIngredient: 'Cholecalciferol',
+        manufacturer: 'Nature Made',
+        rating: 4.7,
+        reviewCount: 156,
+        tags: ['vitamin d', 'bone health', 'immunity'],
+        createdAt: DateTime.now().subtract(const Duration(days: 15)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 9,
+        name: 'Omega-3 Fish Oil',
+        description: 'Premium fish oil capsules for heart and brain health',
+        price: 680.00,
+        image: 'assets/img/omega3.jpg',
+        category: 'vitamins',
+        brand: 'Nordic Naturals',
+        sku: 'OME-3-120',
+        stockQuantity: 45,
+        isAvailable: true,
+        requiresPrescription: false,
+        manufacturer: 'Nordic Naturals',
+        rating: 4.8,
+        reviewCount: 234,
+        tags: ['omega 3', 'heart health', 'brain health'],
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 10,
+        name: 'Calcium + Vitamin D',
+        description: 'Calcium supplement with Vitamin D for bone strength',
+        price: 280.00,
+        image: 'assets/img/calcium.jpg',
+        category: 'vitamins',
+        brand: 'Caltrate',
+        sku: 'CAL-VD-60',
+        stockQuantity: 75,
+        isAvailable: true,
+        requiresPrescription: false,
+        manufacturer: 'Pfizer',
+        rating: 4.4,
+        reviewCount: 112,
+        tags: ['calcium', 'bone health', 'vitamin d'],
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        updatedAt: DateTime.now(),
+      ),
+
+      // First Aid
+      ProductModel(
+        id: 11,
         name: 'Betadine Solution 60ml',
-        description: 'Antiseptic solution for wound cleaning and disinfection. Effective against bacteria, viruses, and fungi.',
+        description: 'Antiseptic solution for wound cleaning and disinfection',
         price: 85.00,
         image: 'assets/img/betadine.jpg',
         category: 'first_aid',
@@ -373,9 +373,70 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 4,
+        id: 12,
+        name: 'Alcohol 70% 500ml',
+        description: 'Isopropyl alcohol for disinfection and cleaning',
+        price: 45.00,
+        image: 'assets/img/alcohol.jpg',
+        category: 'first_aid',
+        brand: 'Green Cross',
+        sku: 'ALC-70-500',
+        stockQuantity: 150,
+        isAvailable: true,
+        requiresPrescription: false,
+        activeIngredient: 'Isopropyl Alcohol',
+        manufacturer: 'Green Cross',
+        rating: 4.2,
+        reviewCount: 67,
+        tags: ['disinfectant', 'cleaning', 'antiseptic'],
+        createdAt: DateTime.now().subtract(const Duration(days: 15)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 13,
+        name: 'Band-Aid Adhesive Bandages',
+        description: 'Sterile adhesive bandages for wound protection',
+        price: 125.00,
+        image: 'assets/img/bandaid.jpg',
+        category: 'first_aid',
+        brand: 'Band-Aid',
+        sku: 'BND-AID-50',
+        stockQuantity: 200,
+        isAvailable: true,
+        requiresPrescription: false,
+        manufacturer: 'Johnson & Johnson',
+        rating: 4.6,
+        reviewCount: 189,
+        tags: ['bandages', 'wound care', 'first aid'],
+        createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 14,
+        name: 'Hydrogen Peroxide 3%',
+        description: 'Antiseptic solution for wound cleaning',
+        price: 35.00,
+        image: 'assets/img/hydrogen-peroxide.jpg',
+        category: 'first_aid',
+        brand: 'Generic',
+        sku: 'HYD-PER-250',
+        stockQuantity: 100,
+        isAvailable: true,
+        requiresPrescription: false,
+        activeIngredient: 'Hydrogen Peroxide',
+        manufacturer: 'Generic Pharma',
+        rating: 4.1,
+        reviewCount: 45,
+        tags: ['antiseptic', 'wound cleaning', 'disinfectant'],
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        updatedAt: DateTime.now(),
+      ),
+
+      // Prescription Drugs
+      ProductModel(
+        id: 15,
         name: 'Amoxicillin 500mg',
-        description: 'Antibiotic capsule for bacterial infections. Effective treatment for respiratory and urinary tract infections.',
+        description: 'Antibiotic capsule for bacterial infections',
         price: 25.00,
         image: 'assets/img/amoxicillin.jpg',
         category: 'prescription_drugs',
@@ -394,22 +455,45 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 5,
-        name: 'Centrum Multivitamins',
-        description: 'Complete multivitamin and mineral supplement. Daily nutrition support for adults with essential vitamins and minerals.',
-        price: 450.00,
-        image: 'assets/img/centrum.jpg',
-        category: 'vitamins',
-        brand: 'Centrum',
-        sku: 'CEN-MULTI-30',
-        stockQuantity: 50,
+        id: 16,
+        name: 'Losartan 50mg',
+        description: 'ACE inhibitor for high blood pressure',
+        price: 180.00,
+        image: 'assets/img/losartan.jpg',
+        category: 'prescription_drugs',
+        brand: 'Generics',
+        sku: 'LOS-50-30',
+        stockQuantity: 60,
         isAvailable: true,
-        requiresPrescription: false,
-        manufacturer: 'Pfizer',
-        rating: 4.6,
-        reviewCount: 234,
-        tags: ['multivitamin', 'daily nutrition', 'minerals'],
+        requiresPrescription: true,
+        dosage: '50mg',
+        activeIngredient: 'Losartan Potassium',
+        manufacturer: 'Generics Pharmacy',
+        rating: 4.4,
+        reviewCount: 89,
+        tags: ['blood pressure', 'hypertension', 'prescription'],
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 17,
+        name: 'Metformin 500mg',
+        description: 'Diabetes medication for blood sugar control',
+        price: 95.00,
+        image: 'assets/img/metformin.jpg',
+        category: 'prescription_drugs',
+        brand: 'Generics',
+        sku: 'MET-500-30',
+        stockQuantity: 80,
+        isAvailable: true,
+        requiresPrescription: true,
+        dosage: '500mg',
+        activeIngredient: 'Metformin HCl',
+        manufacturer: 'Generics Pharmacy',
+        rating: 4.3,
+        reviewCount: 112,
+        tags: ['diabetes', 'blood sugar', 'prescription'],
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
         updatedAt: DateTime.now(),
       ),
     ];

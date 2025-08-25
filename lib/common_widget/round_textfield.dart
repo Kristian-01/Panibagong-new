@@ -7,6 +7,7 @@ class RoundTextfield extends StatelessWidget {
   final String hintText;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final bool enabled;
   final Color? bgColor;
   final Widget? left;
   final Widget? right;
@@ -23,13 +24,14 @@ class RoundTextfield extends StatelessWidget {
       this.right,
       this.maxLines,
       this.onSubmitted,
-      this.obscureText = false});
+      this.obscureText = false,
+      this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-          color: bgColor ?? TColor.textfield,
+          color: enabled ? (bgColor ?? TColor.textfield) : TColor.placeholder.withOpacity(0.3),
           borderRadius: BorderRadius.circular(25)),
       child: Row(
         children: [
@@ -47,11 +49,13 @@ class RoundTextfield extends StatelessWidget {
               obscureText: obscureText,
               keyboardType: keyboardType,
               maxLines: maxLines ?? 1,
+              enabled: enabled,
               onSubmitted: onSubmitted,
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
                 hintText: hintText,
                 hintStyle: TextStyle(
                     color: TColor.placeholder,

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import '../../view/more/about_us_view.dart';
 import '../../view/more/inbox_view.dart';
 import '../../view/more/payment_details_view.dart';
+import '../../view/profile/profile_view.dart';
+import '../../view/login/welcome_view.dart';
 
 import '../../common/color_extension.dart';
 import '../../common/service_call.dart';
 import '../../common_widget/cart_icon.dart';
+import '../../services/user_service.dart';
 import 'my_order_view.dart';
 import 'notification_view.dart';
 
@@ -18,6 +21,12 @@ class MoreView extends StatefulWidget {
 
 class _MoreViewState extends State<MoreView> {
   List moreArr = [
+    {
+      "index": "0",
+      "name": "My Profile",
+      "image": "assets/img/more_profile.png",
+      "base": 0
+    },
     {
       "index": "1",
       "name": "Payment Details",
@@ -51,7 +60,7 @@ class _MoreViewState extends State<MoreView> {
     {
       "index": "6",
       "name": "Logout",
-      "image": "assets/img/more_info.png",
+      "image": "assets/img/more_logout.png",
       "base": 0
     },
   ];
@@ -68,6 +77,8 @@ class _MoreViewState extends State<MoreView> {
               const SizedBox(
                 height: 46,
               ),
+              
+              // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -84,6 +95,103 @@ class _MoreViewState extends State<MoreView> {
                   ],
                 ),
               ),
+              
+              const SizedBox(height: 20),
+              
+              // User Profile Section
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: TColor.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: TColor.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    // Profile Picture
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: TColor.primary,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        UserService.getUserDisplayName().isNotEmpty 
+                            ? UserService.getUserDisplayName()[0].toUpperCase()
+                            : 'U',
+                        style: TextStyle(
+                          color: TColor.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 15),
+                    
+                    // User Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Hi, ${UserService.getUserDisplayName()}!",
+                            style: TextStyle(
+                              color: TColor.primaryText,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            UserService.getUserEmail(),
+                            style: TextStyle(
+                              color: TColor.secondaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Welcome to Nine27 Pharmacy",
+                            style: TextStyle(
+                              color: TColor.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Edit Profile Button
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileView(),
+                          ),
+                        ).then((_) {
+                          // Refresh the view when returning from profile
+                          setState(() {});
+                        });
+                      },
+                      icon: Icon(
+                        Icons.edit,
+                        color: TColor.primary,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Menu Items
               ListView.builder(
                   padding: EdgeInsets.zero,
                   physics: const NeverScrollableScrollPhysics(),
@@ -95,13 +203,23 @@ class _MoreViewState extends State<MoreView> {
                     return InkWell(
                       onTap: () {
                         switch (mObj["index"].toString()) {
+                          case "0":
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ProfileView()))
+                                .then((_) {
+                              // Refresh the view when returning from profile
+                              setState(() {});
+                            });
+                            break;
+                            
                           case "1":
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
                                         const PaymentDetailsView()));
-
                             break;
 
                           case "2":
@@ -109,24 +227,33 @@ class _MoreViewState extends State<MoreView> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => const MyOrderView()));
+                            break;
+                            
                           case "3":
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
                                         const NotificationsView()));
+                            break;
+                            
                           case "4":
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => const InboxView()));
+                            break;
+                            
                           case "5":
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => const AboutUsView()));
+                            break;
+                            
                           case "6":
-                            ServiceCall.logout();
+                            _showLogoutDialog();
+                            break;
 
                           default:
                         }
@@ -156,10 +283,7 @@ class _MoreViewState extends State<MoreView> {
                                         borderRadius:
                                             BorderRadius.circular(25)),
                                     alignment: Alignment.center,
-                                    child: Image.asset(mObj["image"].toString(),
-                                        width: 25,
-                                        height: 25,
-                                        fit: BoxFit.contain),
+                                    child: _getMenuIcon(mObj["index"].toString()),
                                   ),
                                   const SizedBox(
                                     width: 15,
@@ -216,6 +340,59 @@ class _MoreViewState extends State<MoreView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _getMenuIcon(String index) {
+    switch (index) {
+      case "0":
+        return Icon(Icons.person, color: TColor.primary, size: 25);
+      case "1":
+        return Icon(Icons.payment, color: TColor.primary, size: 25);
+      case "2":
+        return Icon(Icons.shopping_bag, color: TColor.primary, size: 25);
+      case "3":
+        return Icon(Icons.notifications, color: TColor.primary, size: 25);
+      case "4":
+        return Icon(Icons.inbox, color: TColor.primary, size: 25);
+      case "5":
+        return Icon(Icons.info, color: TColor.primary, size: 25);
+      case "6":
+        return Icon(Icons.logout, color: Colors.red, size: 25);
+      default:
+        return Image.asset("assets/img/more_info.png",
+            width: 25, height: 25, fit: BoxFit.contain);
+    }
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await UserService.logout();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const WelcomeView()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: Text("Logout", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

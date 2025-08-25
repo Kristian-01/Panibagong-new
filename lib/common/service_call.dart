@@ -1,18 +1,38 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import '../common/globs.dart';
 import '../common/locator.dart';
 import 'package:http/http.dart' as http;
 
+/// Callback for successful HTTP responses with decoded JSON body.
 typedef ResSuccess = Future<void> Function(Map<String, dynamic>);
+
+/// Callback for failed HTTP responses or parsing errors.
 typedef ResFailure = Future<void> Function(dynamic);
 
+/// Centralized HTTP client for the app.
+///
+/// Provides GET/POST helpers that:
+/// - attach JSON headers and optional Bearer token
+/// - serialize query/body
+/// - normalize Laravel-style errors (422 validation, message on >=400)
+/// - surface results via [ResSuccess]/[ResFailure] callbacks.
 class ServiceCall {
+  /// App-wide navigator to perform route changes after auth-related calls.
   static final NavigationService navigationService = locator<NavigationService>();
+
+  /// Current authenticated user payload, expected to contain `token` or `access_token`.
   static Map userPayload = {};
 
-
+  /// Perform an HTTP GET.
+  ///
+  /// path: Full request URL.
+  /// parameters: Query parameters; null values are ignored.
+  /// isToken: When true, adds `Authorization: Bearer <token>` from [userPayload].
+  /// withSuccess: Receives decoded JSON on success (2xx).
+  /// failure: Receives a message or error on non-2xx or exceptions.
   static void get(String path, Map<String, dynamic> parameters,
       {bool isToken = false, ResSuccess? withSuccess, ResFailure? failure}) {
     Future(() {
@@ -54,6 +74,7 @@ class ServiceCall {
 
         http
             .get(Uri.parse(fullUrl), headers: headers)
+            .timeout(const Duration(seconds: 15))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');
@@ -92,8 +113,14 @@ class ServiceCall {
           } catch (err) {
             if (failure != null) failure(err.toString());
           }
-        }).catchError( (e) {
-           if (failure != null) failure(e.toString());
+        }).catchError((e) {
+          if (failure != null) {
+            if (e is TimeoutException) {
+              failure('Request timed out. Please check your connection and ensure the server is running.');
+            } else {
+              failure('Connection error: ${e.toString()}');
+            }
+          }
         });
       } catch (err) {
         if (failure != null) failure(err.toString());
@@ -101,6 +128,13 @@ class ServiceCall {
     });
   }
 
+  /// Perform an HTTP POST with a JSON body.
+  ///
+  /// parameter: Request payload that will be JSON-encoded.
+  /// path: Full request URL.
+  /// isToken: When true, adds `Authorization: Bearer <token>` from [userPayload].
+  /// withSuccess: Receives decoded JSON on success (2xx).
+  /// failure: Receives a message or error on non-2xx or exceptions.
   static void post(Map<String, dynamic> parameter, String path,
       {bool isToken = false, ResSuccess? withSuccess, ResFailure? failure}) {
     Future(() {
@@ -130,6 +164,7 @@ class ServiceCall {
 
         http
             .post(Uri.parse(path), body: jsonBody, headers: headers)
+            .timeout(const Duration(seconds: 15))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');
@@ -168,8 +203,14 @@ class ServiceCall {
           } catch (err) {
             if (failure != null) failure(err.toString());
           }
-        }).catchError( (e) {
-           if (failure != null) failure(e.toString());
+        }).catchError((e) {
+          if (failure != null) {
+            if (e is TimeoutException) {
+              failure('Request timed out. Please check your connection and ensure the server is running.');
+            } else {
+              failure('Connection error: ${e.toString()}');
+            }
+          }
         });
       } catch (err) {
         if (failure != null) failure(err.toString());
@@ -177,6 +218,7 @@ class ServiceCall {
     });
   }
 
+  /// Clear local auth state and redirect to the welcome route.
   static logout(){
     Globs.udBoolSet(false, Globs.userLogin);
     userPayload = {};

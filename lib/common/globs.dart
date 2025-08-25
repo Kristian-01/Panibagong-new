@@ -162,7 +162,11 @@ class Globs {
 
 class SVKey {
   // Laravel Backend Configuration
-  static const mainUrl = "http://192.168.1.6:8000"; // Laravel default port
+  // Use different URLs based on your testing environment:
+  // - Android Emulator: "http://10.0.2.2:8000"
+  // - iOS Simulator: "http://127.0.0.1:8000" 
+  // - Physical Device: "http://192.168.1.6:8000" (your PC's IP)
+  static const mainUrl = "http://10.0.2.2:8000"; // For Android Emulator
   static const baseUrl = '$mainUrl/api/';
 
   // Laravel API Endpoints

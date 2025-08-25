@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductController;
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -25,6 +26,18 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// Public product routes (no authentication required)
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::get('/featured', [ProductController::class, 'featured']);
+    Route::get('/category/{category}', [ProductController::class, 'byCategory']);
+    Route::get('/suggestions', [ProductController::class, 'suggestions']);
+    Route::get('/{id}', [ProductController::class, 'show']);
+});
+
+// Public categories route
+Route::get('/categories', [ProductController::class, 'categories']);
 
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
