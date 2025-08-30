@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import '../common/color_extension.dart';
-import '../common/locator.dart';
-import '../common/service_call.dart';
-import '../view/login/welcome_view.dart';
-import '../view/main_tabview/main_tabview.dart';
-import '../view/on_boarding/startup_view.dart';
+import 'common/color_extension.dart';
+import 'common/locator.dart';
+import 'common/service_call.dart';
+import 'view/login/welcome_view.dart';
+import 'view/main_tabview/main_tabview.dart';
+import 'view/on_boarding/startup_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'common/globs.dart';

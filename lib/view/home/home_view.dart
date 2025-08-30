@@ -13,6 +13,7 @@ import '../../services/product_service.dart';
 import '../../models/product_model.dart';
 import '../../services/cart_service.dart';
 import '../products/category_products_view.dart';
+import '../products/product_catalog_view.dart';
 import 'location_selection_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -29,9 +30,8 @@ class _HomeViewState extends State<HomeView> {
   List<ProductModel> searchResults = [];
   List<ProductModel> allProducts = [];
   List<ProductModel> featuredMedicines = [];
-  List<ProductModel> popularVitamins = [];
-  List<ProductModel> firstAidItems = [];
-  List<ProductModel> prescriptionDrugs = [];
+  List<ProductModel> groceriesHighlights = [];
+  List<ProductModel> specialOffers = [];
   String currentAddress = "Current Location";
 
   // Pharmacy categories with proper images
@@ -66,10 +66,46 @@ class _HomeViewState extends State<HomeView> {
     },
   ];
 
+  // Quick Links for pharmacy
+  List quickLinks = [];
+
   @override
   void initState() {
     super.initState();
     txtSearch.addListener(_onSearchChanged);
+    
+    // Initialize quick links
+    quickLinks = [
+      {
+        "icon": Icons.medication,
+        "title": "Order Prescription",
+        "subtitle": "Upload your prescription",
+        "color": Colors.blue[600]!,
+        "onTap": () => _navigateToProducts('prescription_drugs', 'Prescription Medicines')
+      },
+      {
+        "icon": Icons.medical_services,
+        "title": "First Aid Kit",
+        "subtitle": "Emergency supplies",
+        "color": Colors.red[600]!,
+        "onTap": () => _navigateToProducts('first_aid', 'First Aid & Wound Care')
+      },
+      {
+        "icon": Icons.health_and_safety,
+        "title": "Health Check",
+        "subtitle": "Monitoring devices",
+        "color": Colors.green[600]!,
+        "onTap": () => _navigateToProducts('health_devices', 'Health Monitoring')
+      },
+      {
+        "icon": Icons.local_pharmacy,
+        "title": "Consultation",
+        "subtitle": "Talk to pharmacist",
+        "color": Colors.purple[600]!,
+        "onTap": () => _showConsultationInfo()
+      },
+    ];
+    
     _loadHomeData();
   }
 
@@ -96,33 +132,26 @@ class _HomeViewState extends State<HomeView> {
         setState(() {
           allProducts = products;
           
-          // Featured Medicines - pain relief medicines with high ratings
+          // Featured Medicines - best sellers and high-rated medicines
           featuredMedicines = products
-              .where((p) => p.category == 'medicines' && p.isAvailable)
+              .where((p) => (p.category == 'medicines' || p.category == 'vitamins') && p.isAvailable)
               .toList()
               ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
-          featuredMedicines = featuredMedicines.take(5).toList();
+          featuredMedicines = featuredMedicines.take(6).toList();
           
-          // Popular Vitamins - vitamins and supplements
-          popularVitamins = products
-              .where((p) => p.category == 'vitamins' && p.isAvailable)
+          // Groceries Highlights - snacks, drinks, baby essentials
+          groceriesHighlights = products
+              .where((p) => (p.category == 'groceries' || p.category == 'snacks' || p.category == 'baby_care') && p.isAvailable)
               .toList()
               ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
-          popularVitamins = popularVitamins.take(4).toList();
+          groceriesHighlights = groceriesHighlights.take(4).toList();
           
-          // First Aid Items - wound care and antiseptics
-          firstAidItems = products
-              .where((p) => p.category == 'first_aid' && p.isAvailable)
+          // Special Offers - products with high ratings or low stock (as special offers)
+          specialOffers = products
+              .where((p) => p.isAvailable && (p.rating ?? 0) >= 4.0)
               .toList()
               ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
-          firstAidItems = firstAidItems.take(4).toList();
-          
-          // Prescription Drugs - require prescription
-          prescriptionDrugs = products
-              .where((p) => p.category == 'prescription_drugs' && p.isAvailable)
-              .toList()
-              ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
-          prescriptionDrugs = prescriptionDrugs.take(3).toList();
+          specialOffers = specialOffers.take(4).toList();
           
           isLoading = false;
         });
@@ -241,6 +270,34 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  void _showConsultationInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Pharmacist Consultation", style: TextStyle(color: TColor.primaryText)),
+        content: Text("Our licensed pharmacists are available for consultation. Please visit our store or call us for personalized advice."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK", style: TextStyle(color: TColor.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToProducts(String category, String categoryName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryProductsView(
+          category: category,
+          categoryName: categoryName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -282,6 +339,9 @@ class _HomeViewState extends State<HomeView> {
                           ],
                         ),
                       ),
+
+
+
                       const SizedBox(width: 10),
                       const CartIcon(size: 28),
                     ],
@@ -515,8 +575,8 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       children: [
         // Categories
-        SizedBox(
-          height: 120,
+        Container(
+          height: 130,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -534,93 +594,117 @@ class _HomeViewState extends State<HomeView> {
           ),
         ),
 
-        // Pain Relief Medicines
+        // Featured Medicines Section
         if (featuredMedicines.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ViewAllTitleRow(
-              title: "Pain Relief Medicines", 
-              onView: () => _navigateToCategory('medicines')
+              title: "Featured Medicines", 
+              onView: () => _navigateToProducts('', 'All Products')
             ),
           ),
-          ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            itemCount: featuredMedicines.length,
-            itemBuilder: (context, index) {
-              var product = featuredMedicines[index];
-              return _buildMedicineRow(product);
-            },
-          ),
-        ],
-
-        // Health Supplements (Vitamins)
-        if (popularVitamins.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ViewAllTitleRow(
-              title: "Health Supplements", 
-              onView: () => _navigateToCategory('vitamins')
-            ),
-          ),
-          SizedBox(
-            height: 280,
+          const SizedBox(height: 15),
+          Container(
+            height: 220,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: popularVitamins.length,
+              itemCount: featuredMedicines.length,
               itemBuilder: (context, index) {
-                var product = popularVitamins[index];
-                return _buildVitaminCard(product);
+                var product = featuredMedicines[index];
+                return _buildFeaturedMedicineCard(product);
               },
             ),
           ),
         ],
 
-        // First Aid & Wound Care
-        if (firstAidItems.isNotEmpty) ...[
+        const SizedBox(height: 30),
+
+        // Groceries Highlights Section
+        if (groceriesHighlights.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ViewAllTitleRow(
-              title: "First Aid & Wound Care", 
-              onView: () => _navigateToCategory('first_aid')
+              title: "Groceries Highlights", 
+              onView: () => _navigateToProducts('groceries', 'Groceries & Essentials')
             ),
           ),
-          SizedBox(
+          const SizedBox(height: 15),
+          Container(
             height: 200,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: firstAidItems.length,
+              itemCount: groceriesHighlights.length,
               itemBuilder: (context, index) {
-                var product = firstAidItems[index];
-                return _buildFirstAidCard(product);
+                var product = groceriesHighlights[index];
+                return _buildGroceryCard(product);
               },
             ),
           ),
         ],
 
-        // Prescription Medicines
-        if (prescriptionDrugs.isNotEmpty) ...[
+        const SizedBox(height: 30),
+
+        // Special Offers Section
+        if (specialOffers.isNotEmpty) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ViewAllTitleRow(
-              title: "Prescription Medicines", 
-              onView: () => _navigateToCategory('prescription_drugs')
+              title: "Special Offers & Discounts", 
+              onView: () => _navigateToProducts('offers', 'Special Offers')
             ),
           ),
-          ListView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: prescriptionDrugs.length,
-            itemBuilder: (context, index) {
-              var product = prescriptionDrugs[index];
-              return _buildPrescriptionRow(product);
-            },
+          const SizedBox(height: 15),
+          Container(
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              itemCount: specialOffers.length,
+              itemBuilder: (context, index) {
+                var product = specialOffers[index];
+                return _buildSpecialOfferCard(product);
+              },
+            ),
           ),
         ],
+
+        const SizedBox(height: 30),
+
+        // Quick Links Section
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Quick Links",
+                style: TextStyle(
+                  color: TColor.primaryText,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 15),
+              GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 1.2,
+                ),
+                itemCount: quickLinks.length,
+                itemBuilder: (context, index) {
+                  var link = quickLinks[index];
+                  return _buildQuickLinkCard(link);
+                },
+              ),
+            ],
+          ),
+        ),
 
         const SizedBox(height: 100), // Bottom spacing
       ],
@@ -752,126 +836,10 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildMedicineRow(ProductModel product) {
+  Widget _buildFeaturedMedicineCard(ProductModel product) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 70,
-                  height: 70,
-                  color: Colors.blue[50],
-                  child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: TextStyle(
-                    color: TColor.primaryText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (product.brand != null)
-                  Text(
-                    "by ${product.brand}",
-                    style: TextStyle(
-                      color: Colors.blue[600],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                const SizedBox(height: 4),
-                Text(
-                  product.description,
-                  style: TextStyle(
-                    color: TColor.secondaryText,
-                    fontSize: 12,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      product.formattedPrice,
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (product.rating != null)
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 14),
-                          const SizedBox(width: 2),
-                          Text(
-                            product.rating!.toStringAsFixed(1),
-                            style: TextStyle(
-                              color: TColor.secondaryText,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: product.inStock ? () => _addToCart(product) : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: product.inStock ? Colors.blue[600] : Colors.grey,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            child: Text(
-              product.inStock ? "Add to Cart" : "Out of Stock",
-              style: const TextStyle(fontSize: 12, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVitaminCard(ProductModel product) {
-    return Container(
-      width: 200,
+      width: 160,
+      height: 200,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -890,30 +858,33 @@ class _HomeViewState extends State<HomeView> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
             child: Image.asset(
-              product.image ?? "assets/img/vitamins.png",
+              product.image ?? "assets/img/med.png",
               width: double.infinity,
-              height: 120,
+              height: 90,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   width: double.infinity,
-                  height: 120,
-                  color: Colors.green[50],
-                  child: Icon(Icons.health_and_safety, color: Colors.green[600], size: 40),
+                  height: 90,
+                  color: Colors.blue[50],
+                  child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
                 );
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
+
+          
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   product.name,
                   style: TextStyle(
                     color: TColor.primaryText,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
                   maxLines: 2,
@@ -924,12 +895,12 @@ class _HomeViewState extends State<HomeView> {
                   Text(
                     product.brand!,
                     style: TextStyle(
-                      color: Colors.green[600],
-                      fontSize: 11,
+                      color: Colors.blue[600],
+                      fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -957,21 +928,24 @@ class _HomeViewState extends State<HomeView> {
                       ),
                   ],
                 ),
+           
+        
+          
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: product.inStock ? () => _addToCart(product) : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: product.inStock ? Colors.green[600] : Colors.grey,
+                      backgroundColor: product.inStock ? Colors.blue[600] : Colors.grey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                     ),
                     child: Text(
                       product.inStock ? "Add" : "Out",
-                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                      style: const TextStyle(fontSize: 11, color: Colors.white),
                     ),
                   ),
                 ),
@@ -983,9 +957,10 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildFirstAidCard(ProductModel product) {
+  Widget _buildGroceryCard(ProductModel product) {
     return Container(
-      width: 180,
+      width: 140,
+      height: 180,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1004,22 +979,22 @@ class _HomeViewState extends State<HomeView> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
             child: Image.asset(
-              product.image ?? "assets/img/first aid.png",
+              product.image ?? "assets/img/vitamins.png",
               width: double.infinity,
-              height: 100,
+              height: 80,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   width: double.infinity,
-                  height: 100,
-                  color: Colors.red[50],
-                  child: Icon(Icons.medical_services, color: Colors.red[600], size: 35),
+                  height: 80,
+                  color: Colors.green[50],
+                  child: Icon(Icons.shopping_basket, color: Colors.green[600], size: 30),
                 );
               },
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1027,7 +1002,7 @@ class _HomeViewState extends State<HomeView> {
                   product.name,
                   style: TextStyle(
                     color: TColor.primaryText,
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                   maxLines: 2,
@@ -1037,8 +1012,8 @@ class _HomeViewState extends State<HomeView> {
                 Text(
                   product.formattedPrice,
                   style: TextStyle(
-                    color: Colors.red[700],
-                    fontSize: 14,
+                    color: Colors.green[700],
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1048,15 +1023,15 @@ class _HomeViewState extends State<HomeView> {
                   child: ElevatedButton(
                     onPressed: product.inStock ? () => _addToCart(product) : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: product.inStock ? Colors.red[600] : Colors.grey,
+                      backgroundColor: product.inStock ? Colors.green[600] : Colors.grey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                     ),
                     child: Text(
                       product.inStock ? "Add" : "Out",
-                      style: const TextStyle(fontSize: 11, color: Colors.white),
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
                     ),
                   ),
                 ),
@@ -1068,92 +1043,185 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildPrescriptionRow(ProductModel product) {
+  Widget _buildSpecialOfferCard(ProductModel product) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(12),
+      width: 160,
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 50,
-                  height: 50,
-                  color: Colors.orange[50],
-                  child: Icon(Icons.local_pharmacy, color: Colors.orange[600], size: 20),
-                );
-              },
-            ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Image.asset(
+                  product.image ?? "assets/img/med.png",
+                  width: double.infinity,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: double.infinity,
+                      height: 100,
+                      color: Colors.orange[50],
+                      child: Icon(Icons.local_offer, color: Colors.orange[600], size: 35),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        product.name,
-                        style: TextStyle(
-                          color: TColor.primaryText,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          product.formattedPrice,
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                                            if (product.rating != null && product.rating! >= 4.0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          "⭐ ${product.rating!.toStringAsFixed(1)}",
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        "Rx Required",
-                        style: TextStyle(
-                          color: Colors.orange[700],
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: product.inStock ? () => _addToCart(product) : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: product.inStock ? Colors.orange[600] : Colors.grey,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                        ),
+                        child: Text(
+                          product.inStock ? "Add" : "Out",
+                          style: const TextStyle(fontSize: 11, color: Colors.white),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  product.formattedPrice,
-                  style: TextStyle(
-                    color: Colors.orange[700],
-                    fontSize: 12,
+              ),
+            ],
+          ),
+          // Rating badge
+          if (product.rating != null && product.rating! >= 4.0)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  "⭐ ${product.rating!.toStringAsFixed(1)}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: product.inStock ? () => _addToCart(product) : null,
-            child: Text(
-              product.inStock ? "Add" : "Out",
-              style: TextStyle(
-                color: product.inStock ? Colors.orange[600] : Colors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickLinkCard(Map link) {
+    return InkWell(
+      onTap: link['onTap'],
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        decoration: BoxDecoration(
+          color: link['color'].withOpacity(0.1),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: link['color'].withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: link['color'].withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                link['icon'],
+                color: link['color'],
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              link['title'],
+              style: TextStyle(
+                color: link['color'],
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              link['subtitle'],
+              style: TextStyle(
+                color: link['color'].withOpacity(0.7),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

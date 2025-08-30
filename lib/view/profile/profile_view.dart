@@ -508,41 +508,7 @@ class _ProfileViewState extends State<ProfileView> {
                         ],
                       ),
                     ] else ...[
-                      // Additional Profile Options
-                      _buildProfileOption(
-                        icon: Icons.security,
-                        title: "Change Password",
-                        subtitle: "Update your password",
-                        onTap: () {
-                          _showInfoMessage("Change password feature coming soon!");
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _buildProfileOption(
-                        icon: Icons.notifications,
-                        title: "Notifications",
-                        subtitle: "Manage notification preferences",
-                        onTap: () {
-                          _showInfoMessage("Notification settings coming soon!");
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _buildProfileOption(
-                        icon: Icons.help,
-                        title: "Help & Support",
-                        subtitle: "Get help and contact support",
-                        onTap: () {
-                          _showInfoMessage("Help & Support coming soon!");
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _buildProfileOption(
-                        icon: Icons.logout,
-                        title: "Logout",
-                        subtitle: "Sign out of your account",
-                        onTap: _showLogoutDialog,
-                        isDestructive: true,
-                      ),
+                      // Profile form is now complete
                     ],
                   ],
                 ),
@@ -731,36 +697,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Logout"),
-          content: const Text("Are you sure you want to logout?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text("Cancel", style: TextStyle(color: TColor.secondaryText)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await UserService.logout();
-                if (mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login',
-                    (route) => false,
-                  );
-                }
-              },
-              child: const Text("Logout", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   @override
   void dispose() {
@@ -770,4 +707,4 @@ class _ProfileViewState extends State<ProfileView> {
     txtAddress.dispose();
     super.dispose();
   }
-}
+} 

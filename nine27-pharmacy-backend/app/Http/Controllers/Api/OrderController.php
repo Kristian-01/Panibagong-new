@@ -348,4 +348,206 @@ class OrderController extends Controller
                 now()->addDays(2)->format('M d, Y') : null,
         ];
     }
+
+    // ========================================
+    // STAFF ORDER MANAGEMENT METHODS
+    // ========================================
+
+    /**
+     * Get all orders for staff management (with pagination and filtering)
+     */
+    public function staffIndex(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'nullable|in:pending,processing,shipped,delivered,cancelled',
+            'order_type' => 'nullable|in:regular,prescription',
+            'category' => 'nullable|string|max:100',
+            'page' => 'nullable|integer|min:1',
+            'limit' => 'nullable|integer|min:1|max:100',
+            'search' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 20);
+
+        $query = Order::with(['user', 'items'])->recent();
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->byStatus($request->status);
+        }
+
+        if ($request->filled('order_type')) {
+            $query->byOrderType($request->order_type);
+        }
+
+        if ($request->filled('category')) {
+            $query->byCategory($request->category);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('order_number', 'LIKE', "%{$search}%")
+                  ->orWhereHas('user', function($userQuery) use ($search) {
+                      $userQuery->where('name', 'LIKE', "%{$search}%")
+                               ->orWhere('email', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Get total count before pagination
+        $total = $query->count();
+
+        // Apply pagination
+        $orders = $query->skip(($page - 1) * $limit)
+                       ->take($limit)
+                       ->get();
+
+        $totalPages = ceil($total / $limit);
+
+        return response()->json([
+            'success' => true,
+            'orders' => $orders,
+            'total' => $total,
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'per_page' => $limit,
+        ]);
+    }
+
+    /**
+     * Start processing order (pending → processing)
+     */
+    public function startProcessing(Order $order): JsonResponse
+    {
+        try {
+            // Check if order can be processed
+            if ($order->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order cannot be processed. Current status: ' . $order->status,
+                ], 400);
+            }
+
+            // Update status to processing
+            $order->markAsProcessing();
+            
+            // Log the status change (you can add activity logging here)
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Order is now being processed',
+                'order' => $order->fresh(['user', 'items']),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark order as shipped (processing → shipped)
+     */
+    public function markShipped(Order $order): JsonResponse
+    {
+        try {
+            // Check if order can be shipped
+            if ($order->status !== 'processing') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order cannot be shipped. Current status: ' . $order->status,
+                ], 400);
+            }
+
+            // Update status to shipped
+            $order->markAsShipped();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Order has been shipped and is on its way',
+                'order' => $order->fresh(['user', 'items']),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Mark order as delivered (shipped → delivered)
+     */
+    public function markDelivered(Order $order): JsonResponse
+    {
+        try {
+            // Check if order can be marked as delivered
+            if ($order->status !== 'shipped') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order cannot be marked as delivered. Current status: ' . $order->status,
+                ], 400);
+            }
+
+            // Update status to delivered
+            $order->markAsDelivered();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Order has been delivered successfully',
+                'order' => $order->fresh(['user', 'items']),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get order statistics for staff dashboard
+     */
+    public function getStatistics(): JsonResponse
+    {
+        try {
+            $stats = [
+                'total_orders' => Order::count(),
+                'pending_orders' => Order::where('status', 'pending')->count(),
+                'processing_orders' => Order::where('status', 'processing')->count(),
+                'shipped_orders' => Order::where('status', 'shipped')->count(),
+                'delivered_orders' => Order::where('status', 'delivered')->count(),
+                'cancelled_orders' => Order::where('status', 'cancelled')->count(),
+                'today_orders' => Order::whereDate('created_at', today())->count(),
+                'revenue_today' => Order::whereDate('created_at', today())
+                                    ->where('status', '!=', 'cancelled')
+                                    ->sum('total_amount'),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'statistics' => $stats,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch statistics: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

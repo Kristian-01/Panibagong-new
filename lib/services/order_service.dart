@@ -236,6 +236,203 @@ class OrderService {
     }
   }
 
+  // ========================================
+  // STAFF ORDER MANAGEMENT METHODS
+  // ========================================
+
+  // Get all orders for staff management
+  static Future<Map<String, dynamic>> getStaffOrders({
+    String? status,
+    String? orderType,
+    String? category,
+    String? search,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      Map<String, dynamic> parameters = {
+        'page': page,
+        'limit': limit,
+      };
+
+      if (status != null && status.isNotEmpty) {
+        parameters['status'] = status;
+      }
+      if (orderType != null && orderType.isNotEmpty) {
+        parameters['order_type'] = orderType;
+      }
+      if (category != null && category.isNotEmpty) {
+        parameters['category'] = category;
+      }
+      if (search != null && search.isNotEmpty) {
+        parameters['search'] = search;
+      }
+
+      final response = await _makeApiCall(
+        '${SVKey.baseUrl}staff/orders',
+        parameters,
+        isToken: true,
+        method: 'GET',
+      );
+
+      if (response['success'] == true) {
+        List<OrderModel> orders = [];
+        if (response['orders'] != null) {
+          orders = (response['orders'] as List)
+              .map((orderJson) => OrderModel.fromJson(orderJson))
+              .toList();
+        }
+
+        return {
+          'success': true,
+          'orders': orders,
+          'total': response['total'] ?? 0,
+          'currentPage': response['current_page'] ?? 1,
+          'totalPages': response['total_pages'] ?? 1,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to fetch orders',
+          'orders': <OrderModel>[],
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+        'orders': <OrderModel>[],
+      };
+    }
+  }
+
+  // Start processing order (pending → processing)
+  static Future<Map<String, dynamic>> startProcessing(int orderId) async {
+    try {
+      final response = await _makeApiCall(
+        '${SVKey.baseUrl}staff/orders/$orderId/start-processing',
+        {},
+        isToken: true,
+        method: 'POST',
+      );
+
+      if (response['success'] == true) {
+        return {
+          'success': true,
+          'message': response['message'] ?? 'Order processing started',
+          'order': response['order'] != null 
+              ? OrderModel.fromJson(response['order']) 
+              : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to start processing',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Mark order as shipped (processing → shipped)
+  static Future<Map<String, dynamic>> markAsShipped(int orderId) async {
+    try {
+      final response = await _makeApiCall(
+        '${SVKey.baseUrl}staff/orders/$orderId/mark-shipped',
+        {},
+        isToken: true,
+        method: 'POST',
+      );
+
+      if (response['success'] == true) {
+        return {
+          'success': true,
+          'message': response['message'] ?? 'Order marked as shipped',
+          'order': response['order'] != null 
+              ? OrderModel.fromJson(response['order']) 
+              : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to mark as shipped',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Mark order as delivered (shipped → delivered)
+  static Future<Map<String, dynamic>> markAsDelivered(int orderId) async {
+    try {
+      final response = await _makeApiCall(
+        '${SVKey.baseUrl}staff/orders/$orderId/mark-delivered',
+        {},
+        isToken: true,
+        method: 'POST',
+      );
+
+      if (response['success'] == true) {
+        return {
+          'success': true,
+          'message': response['message'] ?? 'Order marked as delivered',
+          'order': response['order'] != null 
+              ? OrderModel.fromJson(response['order']) 
+              : null,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to mark as delivered',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
+    }
+  }
+
+  // Get order statistics for staff dashboard
+  static Future<Map<String, dynamic>> getStaffStatistics() async {
+    try {
+      final response = await _makeApiCall(
+        '${SVKey.baseUrl}staff/orders/statistics',
+        {},
+        isToken: true,
+        method: 'GET',
+      );
+
+      if (response['success'] == true) {
+        return {
+          'success': true,
+          'statistics': response['statistics'] ?? {},
+        };
+      } else {
+        return {
+          'success': false,
+          'message': response['message'] ?? 'Failed to fetch statistics',
+          'statistics': {},
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+        'statistics': {},
+      };
+    }
+  }
+
   // Helper method to make API calls
   static Future<Map<String, dynamic>> _makeApiCall(
     String url,

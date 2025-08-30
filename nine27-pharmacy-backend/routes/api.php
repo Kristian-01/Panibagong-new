@@ -69,4 +69,31 @@ Route::middleware('auth:sanctum')->group(function () {
         // Track order by order number
         Route::get('/track/{orderNumber}', [OrderController::class, 'track']);
     });
+
+    // Staff Order Management routes (for staff/admin users)
+    Route::prefix('staff/orders')->group(function () {
+        // Get all orders for staff management
+        Route::get('/', [OrderController::class, 'staffIndex']);
+        
+        // Start processing order (pending → processing)
+        Route::post('/{order}/start-processing', [OrderController::class, 'startProcessing']);
+        
+        // Mark order as shipped (processing → shipped)
+        Route::post('/{order}/mark-shipped', [OrderController::class, 'markShipped']);
+        
+        // Mark order as delivered (shipped → delivered)
+        Route::post('/{order}/mark-delivered', [OrderController::class, 'markDelivered']);
+        
+        // Get order statistics for staff dashboard
+        Route::get('/statistics', [OrderController::class, 'getStatistics']);
+    });
+});
+
+// Catch-all route for unauthenticated requests to protected endpoints
+Route::fallback(function () {
+    return response()->json([
+        'success' => false,
+        'message' => 'Endpoint not found or requires authentication',
+        'error' => 'Route not found'
+    ], 404);
 });

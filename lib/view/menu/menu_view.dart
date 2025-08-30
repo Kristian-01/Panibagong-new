@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_textfield.dart';
 import '../../common_widget/cart_icon.dart';
+import '../menu/staff_order_management_view.dart';
 
 class MenuView extends StatefulWidget {
   const MenuView({super.key});
@@ -209,7 +210,40 @@ class _MenuViewState extends State<MenuView> {
                       var prescription = recentPrescriptions[index] as Map? ?? {};
                       return _buildPrescriptionCard(prescription);
                     },
-                  )
+                  ),
+
+                  // Staff Section (if user is staff)
+                  if (true) // TODO: Replace with actual staff role check
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Staff Management",
+                          style: TextStyle(
+                            color: TColor.primaryText,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        _buildMenuItem(
+                          icon: Icons.assignment,
+                          title: "Order Management",
+                          subtitle: "Manage customer orders",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const StaffOrderManagementView(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -409,6 +443,75 @@ class _MenuViewState extends State<MenuView> {
                     ),
                   ),
                 )),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: TColor.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: TColor.primaryText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: TColor.secondaryText,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: TColor.secondaryText,
+                  size: 16,
+                ),
               ],
             ),
           ),

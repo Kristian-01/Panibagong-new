@@ -19,5 +19,10 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Seed medicines and vitamins
+        $this->call([
+            MedicineListSeeder::class,
+        ]);
     }
 }

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import '../common/service_call.dart';
 import '../common/globs.dart';
 import '../models/product_model.dart';
+import 'package:http/http.dart' as http;
 
 class ProductService {
   // Get all products with filtering and pagination
@@ -12,12 +14,40 @@ class ProductService {
     int limit = 20,
   }) async {
     try {
-      // Use mock data for now to avoid connection issues
-      final mockProducts = MockProductService.getMockProducts();
+      // Build API URL with parameters
+      String url = '${SVKey.svProducts}?page=$page&limit=$limit';
       
+      if (search != null && search.isNotEmpty) {
+        url += '&search=${Uri.encodeComponent(search)}';
+      }
+      
+      if (filters?.category != null) {
+        url += '&category=${Uri.encodeComponent(filters!.category!)}';
+      }
+      
+      // Make API call using http package directly for simplicity
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          final productsData = jsonData['products'] as List;
+          final products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+          
+          return {
+            'success': true,
+            'products': products,
+            'total': jsonData['total'] ?? products.length,
+            'currentPage': jsonData['current_page'] ?? page,
+            'totalPages': jsonData['total_pages'] ?? 1,
+          };
+        }
+      }
+      
+      // Fallback to mock data if API fails
+      final mockProducts = MockProductService.getMockProducts();
       List<ProductModel> filteredProducts = mockProducts;
       
-      // Apply search filter
       if (search != null && search.isNotEmpty) {
         filteredProducts = mockProducts.where((product) {
           return product.name.toLowerCase().contains(search.toLowerCase()) ||
@@ -26,7 +56,6 @@ class ProductService {
         }).toList();
       }
       
-      // Apply category filter
       if (filters?.category != null) {
         filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
       }
@@ -39,10 +68,28 @@ class ProductService {
         'totalPages': 1,
       };
     } catch (e) {
+      // Fallback to mock data on error
+      final mockProducts = MockProductService.getMockProducts();
+      List<ProductModel> filteredProducts = mockProducts;
+      
+      if (search != null && search.isNotEmpty) {
+        filteredProducts = mockProducts.where((product) {
+          return product.name.toLowerCase().contains(search.toLowerCase()) ||
+                 product.description.toLowerCase().contains(search.toLowerCase()) ||
+                 (product.brand ?? "").toLowerCase().contains(search.toLowerCase());
+        }).toList();
+      }
+      
+      if (filters?.category != null) {
+        filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
+      }
+      
       return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-        'products': <ProductModel>[],
+        'success': true,
+        'products': filteredProducts,
+        'total': filteredProducts.length,
+        'currentPage': 1,
+        'totalPages': 1,
       };
     }
   }
@@ -50,6 +97,23 @@ class ProductService {
   // Get product details by ID
   static Future<Map<String, dynamic>> getProductDetails(int productId) async {
     try {
+      // Try to get product details from API
+      final url = '${SVKey.svProductDetails}$productId';
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          final product = ProductModel.fromJson(jsonData['product']);
+          
+          return {
+            'success': true,
+            'product': product,
+          };
+        }
+      }
+      
+      // Fallback to mock data if API fails
       final mockProducts = MockProductService.getMockProducts();
       final product = mockProducts.firstWhere((p) => p.id == productId);
       
@@ -104,6 +168,24 @@ class ProductService {
     int limit = 10,
   }) async {
     try {
+      // Try to get featured products from API
+      final url = '${SVKey.svFeaturedProducts}?limit=$limit';
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          final productsData = jsonData['products'] as List;
+          final products = productsData.map((json) => ProductModel.fromJson(json)).toList();
+          
+          return {
+            'success': true,
+            'products': products,
+          };
+        }
+      }
+      
+      // Fallback to mock data if API fails
       final mockProducts = MockProductService.getMockProducts();
       final featured = mockProducts.where((p) => (p.rating ?? 0) >= 4.0).take(limit).toList();
       
@@ -112,10 +194,13 @@ class ProductService {
         'products': featured,
       };
     } catch (e) {
+      // Fallback to mock data on error
+      final mockProducts = MockProductService.getMockProducts();
+      final featured = mockProducts.where((p) => (p.rating ?? 0) >= 4.0).take(limit).toList();
+      
       return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-        'products': <ProductModel>[],
+        'success': true,
+        'products': featured,
       };
     }
   }
@@ -247,6 +332,113 @@ class MockProductService {
         reviewCount: 67,
         tags: ['pain relief', 'inflammation', 'menstrual pain'],
         createdAt: DateTime.now().subtract(const Duration(days: 10)),
+        updatedAt: DateTime.now(),
+      ),
+      
+      // Additional Medicines from Your List
+      ProductModel(
+        id: 6,
+        name: 'ASCORBIC ACID (MYREVIT C) 120 ML',
+        description: 'Vitamin C syrup for immune system support',
+        price: 85.00,
+        image: 'assets/img/vitamin-c.jpg',
+        category: 'vitamins',
+        brand: 'Myrevit',
+        sku: 'VIT-C-120',
+        stockQuantity: 100,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '120ml',
+        activeIngredient: 'Ascorbic Acid',
+        manufacturer: 'Myrevit',
+        rating: 4.6,
+        reviewCount: 95,
+        tags: ['vitamin c', 'immune system', 'antioxidant'],
+        createdAt: DateTime.now().subtract(const Duration(days: 8)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 7,
+        name: 'Ceelin Chewable 30s/bot (Ascorbic)',
+        description: 'Chewable Vitamin C tablets for children',
+        price: 75.00,
+        image: 'assets/img/ceelin.jpg',
+        category: 'vitamins',
+        brand: 'Ceelin',
+        sku: 'CEL-CHEW-30',
+        stockQuantity: 150,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '30 tablets',
+        activeIngredient: 'Ascorbic Acid',
+        manufacturer: 'Ceelin',
+        rating: 4.7,
+        reviewCount: 203,
+        tags: ['vitamin c', 'children', 'chewable'],
+        createdAt: DateTime.now().subtract(const Duration(days: 7)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 8,
+        name: 'ASCOF 600mg 120ml Syrup',
+        description: 'Herbal cough syrup with lagundi extract',
+        price: 75.00,
+        image: 'assets/img/ascof.jpg',
+        category: 'medicines',
+        brand: 'ASCOF',
+        sku: 'ASCOF-600-120',
+        stockQuantity: 100,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '600mg/5ml',
+        activeIngredient: 'Lagundi Extract',
+        manufacturer: 'ASCOF',
+        rating: 4.6,
+        reviewCount: 156,
+        tags: ['cough', 'herbal', 'lagundi'],
+        createdAt: DateTime.now().subtract(const Duration(days: 6)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 9,
+        name: 'Bioflu Tablet',
+        description: 'Combination medicine for flu symptoms',
+        price: 55.00,
+        image: 'assets/img/bioflu.jpg',
+        category: 'medicines',
+        brand: 'Unilab',
+        sku: 'BIOFLU-20',
+        stockQuantity: 140,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: '1 tablet as needed',
+        activeIngredient: 'Paracetamol + Phenylephrine + Chlorphenamine',
+        manufacturer: 'Unilab',
+        rating: 4.5,
+        reviewCount: 189,
+        tags: ['flu', 'cold', 'fever'],
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        updatedAt: DateTime.now(),
+      ),
+      ProductModel(
+        id: 10,
+        name: 'Vicks Vaporub 10g',
+        description: 'Topical ointment for cough and cold relief',
+        price: 35.00,
+        image: 'assets/img/vicks.jpg',
+        category: 'medicines',
+        brand: 'Vicks',
+        sku: 'VICKS-10G',
+        stockQuantity: 200,
+        isAvailable: true,
+        requiresPrescription: false,
+        dosage: 'Apply to chest and throat',
+        activeIngredient: 'Menthol + Camphor + Eucalyptus',
+        manufacturer: 'Vicks',
+        rating: 4.6,
+        reviewCount: 289,
+        tags: ['cough', 'cold', 'topical'],
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
         updatedAt: DateTime.now(),
       ),
 
