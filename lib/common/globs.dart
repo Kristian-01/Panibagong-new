@@ -166,7 +166,8 @@ class SVKey {
   // - Android Emulator: "http://10.0.2.2:8000"
   // - iOS Simulator: "http://127.0.0.1:8000" 
   // - Physical Device: "http://192.168.1.6:8000" (your PC's IP)
-  static const mainUrl = "http://192.168.1.6:8000"; // For Physical Device
+  // - Local Development: "http://localhost:8000"
+  static const mainUrl = "http://10.0.2.2:8000"; // For Android Emulator/Physical Device
   static const baseUrl = '$mainUrl/api/';
 
   // Laravel API Endpoints

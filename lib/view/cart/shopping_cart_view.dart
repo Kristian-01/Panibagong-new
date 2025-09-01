@@ -354,7 +354,12 @@ class _ShoppingCartViewState extends State<ShoppingCartView> {
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(Icons.medical_services, color: TColor.primary),
                     )
-                  : Icon(Icons.medical_services, color: TColor.primary),
+                  : Image.asset(
+                      "assets/img/med.png",
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.medical_services, color: TColor.primary),
+                    ),
             ),
           ),
 

@@ -409,7 +409,7 @@ class _CategoryProductsViewState extends State<CategoryProductsView> {
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              product.image ?? "assets/img/placeholder.png",
+              product.image ?? "assets/img/med.png",
               width: 80,
               height: 80,
               fit: BoxFit.cover,

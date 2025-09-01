@@ -45,52 +45,10 @@ class ProductService {
       }
       
       // Fallback to mock data if API fails
-      final mockProducts = MockProductService.getMockProducts();
-      List<ProductModel> filteredProducts = mockProducts;
-      
-      if (search != null && search.isNotEmpty) {
-        filteredProducts = mockProducts.where((product) {
-          return product.name.toLowerCase().contains(search.toLowerCase()) ||
-                 product.description.toLowerCase().contains(search.toLowerCase()) ||
-                 (product.brand ?? "").toLowerCase().contains(search.toLowerCase());
-        }).toList();
-      }
-      
-      if (filters?.category != null) {
-        filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
-      }
-      
-      return {
-        'success': true,
-        'products': filteredProducts,
-        'total': filteredProducts.length,
-        'currentPage': 1,
-        'totalPages': 1,
-      };
+      return _getFilteredMockProducts(search: search, filters: filters, limit: limit);
     } catch (e) {
       // Fallback to mock data on error
-      final mockProducts = MockProductService.getMockProducts();
-      List<ProductModel> filteredProducts = mockProducts;
-      
-      if (search != null && search.isNotEmpty) {
-        filteredProducts = mockProducts.where((product) {
-          return product.name.toLowerCase().contains(search.toLowerCase()) ||
-                 product.description.toLowerCase().contains(search.toLowerCase()) ||
-                 (product.brand ?? "").toLowerCase().contains(search.toLowerCase());
-        }).toList();
-      }
-      
-      if (filters?.category != null) {
-        filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
-      }
-      
-      return {
-        'success': true,
-        'products': filteredProducts,
-        'total': filteredProducts.length,
-        'currentPage': 1,
-        'totalPages': 1,
-      };
+      return _getFilteredMockProducts(search: search, filters: filters, limit: limit);
     }
   }
 
@@ -222,6 +180,41 @@ class ProductService {
       };
     }
   }
+
+  // Helper method to get filtered mock products
+  static Map<String, dynamic> _getFilteredMockProducts({
+    String? search,
+    ProductFilters? filters,
+    int limit = 20,
+  }) {
+    final mockProducts = MockProductService.getMockProducts();
+    List<ProductModel> filteredProducts = mockProducts;
+    
+    if (search != null && search.isNotEmpty) {
+      filteredProducts = mockProducts.where((product) {
+        return product.name.toLowerCase().contains(search.toLowerCase()) ||
+               product.description.toLowerCase().contains(search.toLowerCase()) ||
+               (product.brand ?? "").toLowerCase().contains(search.toLowerCase());
+      }).toList();
+    }
+    
+    if (filters?.category != null) {
+      filteredProducts = filteredProducts.where((p) => p.category == filters!.category).toList();
+    }
+    
+    // Apply limit
+    if (limit < filteredProducts.length) {
+      filteredProducts = filteredProducts.take(limit).toList();
+    }
+    
+    return {
+      'success': true,
+      'products': filteredProducts,
+      'total': filteredProducts.length,
+      'currentPage': 1,
+      'totalPages': 1,
+    };
+  }
 }
 
 // Enhanced mock data with more products
@@ -234,7 +227,7 @@ class MockProductService {
         name: 'Biogesic 500mg',
         description: 'Paracetamol 500mg tablet for fever and pain relief',
         price: 50.00,
-        image: 'assets/img/biogesic.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Unilab',
         sku: 'BIO-500-20',
@@ -255,7 +248,7 @@ class MockProductService {
         name: 'Advil 200mg',
         description: 'Ibuprofen tablets for pain relief and inflammation',
         price: 75.00,
-        image: 'assets/img/advil.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Pfizer',
         sku: 'ADV-200-20',
@@ -276,7 +269,7 @@ class MockProductService {
         name: 'Tylenol 500mg',
         description: 'Acetaminophen tablets for fever and pain relief',
         price: 65.00,
-        image: 'assets/img/tylenol.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Johnson & Johnson',
         sku: 'TYL-500-24',
@@ -297,7 +290,7 @@ class MockProductService {
         name: 'Aspirin 325mg',
         description: 'Low-dose aspirin for heart health and pain relief',
         price: 35.00,
-        image: 'assets/img/aspirin.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Bayer',
         sku: 'ASP-325-100',
@@ -318,7 +311,7 @@ class MockProductService {
         name: 'Mefenamic Acid 500mg',
         description: 'Anti-inflammatory medicine for pain and fever',
         price: 45.00,
-        image: 'assets/img/mefenamic.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Generics',
         sku: 'MEF-500-10',
@@ -341,7 +334,7 @@ class MockProductService {
         name: 'ASCORBIC ACID (MYREVIT C) 120 ML',
         description: 'Vitamin C syrup for immune system support',
         price: 85.00,
-        image: 'assets/img/vitamin-c.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Myrevit',
         sku: 'VIT-C-120',
@@ -362,7 +355,7 @@ class MockProductService {
         name: 'Ceelin Chewable 30s/bot (Ascorbic)',
         description: 'Chewable Vitamin C tablets for children',
         price: 75.00,
-        image: 'assets/img/ceelin.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Ceelin',
         sku: 'CEL-CHEW-30',
@@ -383,7 +376,7 @@ class MockProductService {
         name: 'ASCOF 600mg 120ml Syrup',
         description: 'Herbal cough syrup with lagundi extract',
         price: 75.00,
-        image: 'assets/img/ascof.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'ASCOF',
         sku: 'ASCOF-600-120',
@@ -404,7 +397,7 @@ class MockProductService {
         name: 'Bioflu Tablet',
         description: 'Combination medicine for flu symptoms',
         price: 55.00,
-        image: 'assets/img/bioflu.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Unilab',
         sku: 'BIOFLU-20',
@@ -425,7 +418,7 @@ class MockProductService {
         name: 'Vicks Vaporub 10g',
         description: 'Topical ointment for cough and cold relief',
         price: 35.00,
-        image: 'assets/img/vicks.jpg',
+        image: 'assets/img/med.png',
         category: 'medicines',
         brand: 'Vicks',
         sku: 'VICKS-10G',
@@ -444,11 +437,11 @@ class MockProductService {
 
       // Vitamins
       ProductModel(
-        id: 6,
+        id: 11,
         name: 'Vitamin C 500mg',
         description: 'High-potency Vitamin C supplement for immune system support',
         price: 15.00,
-        image: 'assets/img/vitamin-c.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Centrum',
         sku: 'VIT-C-500-30',
@@ -465,11 +458,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 7,
+        id: 12,
         name: 'Multivitamins Complete',
         description: 'Complete daily multivitamin with minerals',
         price: 450.00,
-        image: 'assets/img/multivitamins.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Centrum',
         sku: 'MUL-COM-30',
@@ -484,11 +477,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 8,
+        id: 13,
         name: 'Vitamin D3 1000IU',
         description: 'High-potency Vitamin D3 for bone health',
         price: 320.00,
-        image: 'assets/img/vitamin-d3.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Nature Made',
         sku: 'VIT-D3-1000-60',
@@ -505,11 +498,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 9,
+        id: 14,
         name: 'Omega-3 Fish Oil',
         description: 'Premium fish oil capsules for heart and brain health',
         price: 680.00,
-        image: 'assets/img/omega3.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Nordic Naturals',
         sku: 'OME-3-120',
@@ -524,11 +517,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 10,
+        id: 15,
         name: 'Calcium + Vitamin D',
         description: 'Calcium supplement with Vitamin D for bone strength',
         price: 280.00,
-        image: 'assets/img/calcium.jpg',
+        image: 'assets/img/vitamins.png',
         category: 'vitamins',
         brand: 'Caltrate',
         sku: 'CAL-VD-60',
@@ -545,11 +538,11 @@ class MockProductService {
 
       // First Aid
       ProductModel(
-        id: 11,
+        id: 16,
         name: 'Betadine Solution 60ml',
         description: 'Antiseptic solution for wound cleaning and disinfection',
         price: 85.00,
-        image: 'assets/img/betadine.jpg',
+        image: 'assets/img/first aid.png',
         category: 'first_aid',
         brand: 'Betadine',
         sku: 'BET-SOL-60',
@@ -565,11 +558,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 12,
+        id: 17,
         name: 'Alcohol 70% 500ml',
         description: 'Isopropyl alcohol for disinfection and cleaning',
         price: 45.00,
-        image: 'assets/img/alcohol.jpg',
+        image: 'assets/img/first aid.png',
         category: 'first_aid',
         brand: 'Green Cross',
         sku: 'ALC-70-500',
@@ -585,11 +578,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 13,
+        id: 18,
         name: 'Band-Aid Adhesive Bandages',
         description: 'Sterile adhesive bandages for wound protection',
         price: 125.00,
-        image: 'assets/img/bandaid.jpg',
+        image: 'assets/img/first aid.png',
         category: 'first_aid',
         brand: 'Band-Aid',
         sku: 'BND-AID-50',
@@ -604,11 +597,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 14,
+        id: 19,
         name: 'Hydrogen Peroxide 3%',
         description: 'Antiseptic solution for wound cleaning',
         price: 35.00,
-        image: 'assets/img/hydrogen-peroxide.jpg',
+        image: 'assets/img/first aid.png',
         category: 'first_aid',
         brand: 'Generic',
         sku: 'HYD-PER-250',
@@ -626,11 +619,11 @@ class MockProductService {
 
       // Prescription Drugs
       ProductModel(
-        id: 15,
+        id: 20,
         name: 'Amoxicillin 500mg',
         description: 'Antibiotic capsule for bacterial infections',
         price: 25.00,
-        image: 'assets/img/amoxicillin.jpg',
+        image: 'assets/img/med.png',
         category: 'prescription_drugs',
         brand: 'Generics',
         sku: 'AMX-500-21',
@@ -647,11 +640,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 16,
+        id: 21,
         name: 'Losartan 50mg',
         description: 'ACE inhibitor for high blood pressure',
         price: 180.00,
-        image: 'assets/img/losartan.jpg',
+        image: 'assets/img/med.png',
         category: 'prescription_drugs',
         brand: 'Generics',
         sku: 'LOS-50-30',
@@ -668,11 +661,11 @@ class MockProductService {
         updatedAt: DateTime.now(),
       ),
       ProductModel(
-        id: 17,
+        id: 22,
         name: 'Metformin 500mg',
         description: 'Diabetes medication for blood sugar control',
         price: 95.00,
-        image: 'assets/img/metformin.jpg',
+        image: 'assets/img/med.png',
         category: 'prescription_drugs',
         brand: 'Generics',
         sku: 'MET-500-30',

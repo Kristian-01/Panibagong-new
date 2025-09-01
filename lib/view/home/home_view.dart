@@ -12,8 +12,11 @@ import '../../common_widget/cart_icon.dart';
 import '../../services/product_service.dart';
 import '../../models/product_model.dart';
 import '../../services/cart_service.dart';
+import '../../models/order_model.dart';
+import '../../services/order_service.dart';
 import '../products/category_products_view.dart';
 import '../products/product_catalog_view.dart';
+import '../orders/order_tracking_view.dart';
 import 'location_selection_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -68,6 +71,9 @@ class _HomeViewState extends State<HomeView> {
 
   // Quick Links for pharmacy
   List quickLinks = [];
+  
+  // Recent orders for quick access
+  List<OrderModel> recentOrders = [];
 
   @override
   void initState() {
@@ -123,8 +129,8 @@ class _HomeViewState extends State<HomeView> {
     });
 
     try {
-      // Get all products from API
-      final productsResponse = await ProductService.getProducts(limit: 50);
+      // Get all products from API with reduced limit for faster loading
+      final productsResponse = await ProductService.getProducts(limit: 20);
       
       if (productsResponse['success'] == true) {
         final products = productsResponse['products'] as List<ProductModel>;
@@ -152,8 +158,6 @@ class _HomeViewState extends State<HomeView> {
               .toList()
               ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
           specialOffers = specialOffers.take(4).toList();
-          
-          isLoading = false;
         });
       } else {
         // Handle API error
@@ -161,13 +165,36 @@ class _HomeViewState extends State<HomeView> {
           isLoading = false;
         });
         _showError('Failed to load products: ${productsResponse['message']}');
+        return;
       }
+      
+      // Load recent orders in parallel for better performance
+      _loadRecentOrders();
+      
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       print('Error loading home data: $e');
       setState(() {
         isLoading = false;
       });
       _showError('Network error: Please check your connection and ensure the server is running.');
+    }
+  }
+
+  /// Load recent orders for quick access
+  Future<void> _loadRecentOrders() async {
+    try {
+      final result = await OrderService.getUserOrders(limit: 3);
+      if (result['success'] == true) {
+        setState(() {
+          recentOrders = result['orders'] as List<OrderModel>;
+        });
+      }
+    } catch (e) {
+      print('Error loading recent orders: $e');
+      // Don't show error for orders, just log it
     }
   }
 
@@ -672,6 +699,31 @@ class _HomeViewState extends State<HomeView> {
 
         const SizedBox(height: 30),
 
+        // Recent Orders Section
+        if (recentOrders.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: ViewAllTitleRow(
+              title: "Recent Orders", 
+              onView: () => Navigator.pushNamed(context, '/orders')
+            ),
+          ),
+          const SizedBox(height: 15),
+          Container(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              itemCount: recentOrders.length,
+              itemBuilder: (context, index) {
+                var order = recentOrders[index];
+                return _buildRecentOrderCard(order);
+              },
+            ),
+          ),
+          const SizedBox(height: 30),
+        ],
+
         // Quick Links Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -878,78 +930,76 @@ class _HomeViewState extends State<HomeView> {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: TextStyle(
-                    color: TColor.primaryText,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                if (product.brand != null)
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    product.brand!,
+                    product.name,
                     style: TextStyle(
-                      color: Colors.blue[600],
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                      color: TColor.primaryText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  const SizedBox(height: 4),
+                  if (product.brand != null)
                     Text(
-                      product.formattedPrice,
+                      product.brand!,
                       style: TextStyle(
-                        color: Colors.green[700],
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        color: Colors.blue[600],
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (product.rating != null)
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 12),
-                          const SizedBox(width: 2),
-                          Text(
-                            product.rating!.toStringAsFixed(1),
-                            style: TextStyle(
-                              color: TColor.secondaryText,
-                              fontSize: 10,
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        product.formattedPrice,
+                        style: TextStyle(
+                          color: Colors.green[700],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (product.rating != null)
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.amber, size: 12),
+                            const SizedBox(width: 2),
+                            Text(
+                              product.rating!.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: TColor.secondaryText,
+                                fontSize: 10,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: product.inStock ? () => _addToCart(product) : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: product.inStock ? Colors.blue[600] : Colors.grey,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
                       ),
-                  ],
-                ),
-           
-        
-          
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: product.inStock ? () => _addToCart(product) : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: product.inStock ? Colors.blue[600] : Colors.grey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                      child: Text(
+                        product.inStock ? "Add" : "Out",
+                        style: const TextStyle(fontSize: 11, color: Colors.white),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                    ),
-                    child: Text(
-                      product.inStock ? "Add" : "Out",
-                      style: const TextStyle(fontSize: 11, color: Colors.white),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -1254,5 +1304,142 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
     );
+  }
+
+  Widget _buildRecentOrderCard(OrderModel order) {
+    return Container(
+      width: 200,
+      height: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrderTrackingView(
+                orderNumber: order.orderNumber,
+              ),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _getOrderStatusColor(order.status).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getOrderStatusIcon(order.status),
+                      color: _getOrderStatusColor(order.status),
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      order.orderNumber,
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                order.status.toUpperCase(),
+                style: TextStyle(
+                  color: _getOrderStatusColor(order.status),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                order.formattedDate,
+                style: TextStyle(
+                  color: TColor.secondaryText,
+                  fontSize: 10,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    order.formattedTotal,
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    order.itemCountText,
+                    style: TextStyle(
+                      color: TColor.secondaryText,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getOrderStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return Colors.green;
+      case 'shipped':
+        return Colors.purple;
+      case 'processing':
+        return Colors.blue;
+      case 'cancelled':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
+  }
+
+  IconData _getOrderStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return Icons.check_circle;
+      case 'shipped':
+        return Icons.local_shipping;
+      case 'processing':
+        return Icons.access_time;
+      case 'cancelled':
+        return Icons.cancel;
+      case 'pending':
+      default:
+        return Icons.pending;
+    }
   }
 }

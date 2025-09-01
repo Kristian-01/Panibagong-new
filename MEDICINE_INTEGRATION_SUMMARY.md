@@ -121,3 +121,7 @@ Your Nine27 Pharmacy app now has a **fully functional medicine system** that:
 - Integrates seamlessly between Laravel backend and Flutter frontend
 
 **Your pharmacy is ready to serve customers with a professional, modern medicine catalog!** 🚀💊
+
+
+
+

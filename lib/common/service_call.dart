@@ -74,7 +74,7 @@ class ServiceCall {
 
         http
             .get(Uri.parse(fullUrl), headers: headers)
-            .timeout(const Duration(seconds: 15))
+            .timeout(const Duration(seconds: 5))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');
@@ -164,7 +164,7 @@ class ServiceCall {
 
         http
             .post(Uri.parse(path), body: jsonBody, headers: headers)
-            .timeout(const Duration(seconds: 15))
+            .timeout(const Duration(seconds: 5))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');

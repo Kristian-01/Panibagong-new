@@ -3,6 +3,7 @@ import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
 import '../../models/order_model.dart';
 import '../../services/order_service.dart';
+import 'order_tracking_view.dart';
 
 class OrderDetailsView extends StatefulWidget {
   final OrderModel order;
@@ -507,25 +508,47 @@ class _OrderDetailsViewState extends State<OrderDetailsView> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  if (order.canCancel)
-                    Expanded(
-                      child: RoundButton(
-                        title: "Cancel Order",
-                        type: RoundButtonType.textPrimary,
-                        onPressed: isLoading ? null : () { _cancelOrder(); },
-                      ),
+                  // Track Order Button (always visible)
+                  SizedBox(
+                    width: double.infinity,
+                    child: RoundButton(
+                      title: "Track Order",
+                      onPressed: isLoading ? null : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrderTrackingView(
+                              orderNumber: order.orderNumber,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  if (order.canCancel && order.canReorder)
-                    const SizedBox(width: 12),
-                  if (order.canReorder)
-                    Expanded(
-                      child: RoundButton(
-                        title: "Reorder",
-                        onPressed: isLoading ? null : () { _reorder(); },
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (order.canCancel)
+                        Expanded(
+                          child: RoundButton(
+                            title: "Cancel Order",
+                            type: RoundButtonType.textPrimary,
+                            onPressed: isLoading ? null : () { _cancelOrder(); },
+                          ),
+                        ),
+                      if (order.canCancel && order.canReorder)
+                        const SizedBox(width: 12),
+                      if (order.canReorder)
+                        Expanded(
+                          child: RoundButton(
+                            title: "Reorder",
+                            onPressed: isLoading ? null : () { _reorder(); },
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),

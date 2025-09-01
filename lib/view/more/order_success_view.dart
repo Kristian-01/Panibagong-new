@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
 import '../main_tabview/main_tabview.dart';
+import '../orders/order_tracking_view.dart';
 
 class OrderSuccessView extends StatelessWidget {
   final String orderId;
@@ -191,10 +192,12 @@ class OrderSuccessView extends StatelessWidget {
                 child: RoundButton(
                   title: "Track Order",
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Order tracking feature coming soon!"),
-                        behavior: SnackBarBehavior.floating,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OrderTrackingView(
+                          orderNumber: orderId,
+                        ),
                       ),
                     );
                   },

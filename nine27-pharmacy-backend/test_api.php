@@ -47,3 +47,7 @@ if (isset($loginResult['token'])) {
 }
 
 echo "API testing completed!\n";
+
+
+
+
