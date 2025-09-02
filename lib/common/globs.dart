@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 /// Global cart item list
 List<Map<String, dynamic>> cartItems = [];
@@ -164,39 +165,60 @@ class SVKey {
   // Laravel Backend Configuration
   // Use different URLs based on your testing environment:
   // - Android Emulator: "http://10.0.2.2:8000"
-  // - iOS Simulator: "http://127.0.0.1:8000" 
-  // - Physical Device: "http://192.168.1.6:8000" (your PC's IP)
-  // - Local Development: "http://localhost:8000"
-  static const mainUrl = "http://10.0.2.2:8000"; // For Android Emulator/Physical Device
-  static const baseUrl = '$mainUrl/api/';
+  // - iOS Simulator: "http://127.0.0.1:8000"
+  // - Desktop/Web: "http://127.0.0.1:8000" (or override)
+  // - Physical Device: set via --dart-define=API_URL=http://<YOUR_PC_IP>:8000
+
+  // Optional override via: flutter run --dart-define=API_URL=http://192.168.x.x:8000
+  static String get mainUrl {
+    const String envUrl = String.fromEnvironment('API_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) return envUrl;
+    return _defaultBaseUrl();
+  }
+
+  static String _defaultBaseUrl() {
+    if (kIsWeb) {
+      return "http://127.0.0.1:8000";
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return "http://10.0.2.2:8000";
+      case TargetPlatform.iOS:
+        return "http://127.0.0.1:8000"; // iOS Simulator
+      default:
+        return "http://127.0.0.1:8000"; // macOS/Linux/Windows
+    }
+  }
+
+  static String get baseUrl => '$mainUrl/api/';
 
   // Laravel API Endpoints
-  static const svLogin = '${baseUrl}login';
-  static const svSignUp = '${baseUrl}register';
-  static const svForgotPasswordRequest = '${baseUrl}forgot-password';
-  static const svForgotPasswordVerify = '${baseUrl}verify-otp';
-  static const svForgotPasswordSetNew = '${baseUrl}reset-password';
+  static String get svLogin => '${baseUrl}login';
+  static String get svSignUp => '${baseUrl}register';
+  static String get svForgotPasswordRequest => '${baseUrl}forgot-password';
+  static String get svForgotPasswordVerify => '${baseUrl}verify-otp';
+  static String get svForgotPasswordSetNew => '${baseUrl}reset-password';
 
   // Additional Laravel endpoints
-  static const svProfile = '${baseUrl}profile';
-  static const svUpdateProfile = '${baseUrl}profile/update';
-  static const svLogout = '${baseUrl}logout';
+  static String get svProfile => '${baseUrl}profile';
+  static String get svUpdateProfile => '${baseUrl}profile/update';
+  static String get svLogout => '${baseUrl}logout';
 
   // Order Management endpoints
-  static const svOrders = '${baseUrl}orders';
-  static const svCreateOrder = '${baseUrl}orders';
-  static const svOrderDetails = '${baseUrl}orders/'; // append order ID
-  static const svCancelOrder = '${baseUrl}orders/'; // append order ID + /cancel
-  static const svReorder = '${baseUrl}orders/'; // append order ID + /reorder
-  static const svTrackOrder = '${baseUrl}orders/track/'; // append order number
+  static String get svOrders => '${baseUrl}orders';
+  static String get svCreateOrder => '${baseUrl}orders';
+  static String get svOrderDetails => '${baseUrl}orders/'; // append order ID
+  static String get svCancelOrder => '${baseUrl}orders/'; // append order ID + /cancel
+  static String get svReorder => '${baseUrl}orders/'; // append order ID + /reorder
+  static String get svTrackOrder => '${baseUrl}orders/track/'; // append order number
 
   // Product Catalog endpoints
-  static const svProducts = '${baseUrl}products';
-  static const svProductDetails = '${baseUrl}products/'; // append product ID
-  static const svFeaturedProducts = '${baseUrl}products/featured';
-  static const svProductsOnSale = '${baseUrl}products/on-sale';
-  static const svProductSuggestions = '${baseUrl}products/suggestions';
-  static const svCategories = '${baseUrl}categories';
+  static String get svProducts => '${baseUrl}products';
+  static String get svProductDetails => '${baseUrl}products/'; // append product ID
+  static String get svFeaturedProducts => '${baseUrl}products/featured';
+  static String get svProductsOnSale => '${baseUrl}products/on-sale';
+  static String get svProductSuggestions => '${baseUrl}products/suggestions';
+  static String get svCategories => '${baseUrl}categories';
 }
 
 class KKey {
