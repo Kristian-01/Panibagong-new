@@ -42,10 +42,25 @@ class _HomeViewState extends State<HomeView> {
   final PageController _promoController = PageController(viewportFraction: 0.9);
   int _currentPromo = 0;
   Timer? _promoTimer;
-  final List<String> _promoImages = const [
-    'assets/img/offer_1.png',
-    'assets/img/offer_2.png',
-    'assets/img/offer_3.png',
+  final List<Map<String, dynamic>> _promoSlides = [
+    {
+      'icon': Icons.local_offer,
+      'title': 'Big Savings',
+      'subtitle': 'Today only',
+      'colors': [Colors.blue, Colors.lightBlueAccent],
+    },
+    {
+      'icon': Icons.health_and_safety,
+      'title': 'Vitamins Deals',
+      'subtitle': 'Boost your immunity',
+      'colors': [Colors.green, Colors.lightGreen],
+    },
+    {
+      'icon': Icons.delivery_dining,
+      'title': 'Free Delivery',
+      'subtitle': 'On eligible orders',
+      'colors': [Colors.orange, Colors.deepOrangeAccent],
+    },
   ];
 
   // Pharmacy categories with proper images
@@ -127,8 +142,8 @@ class _HomeViewState extends State<HomeView> {
 
     // start auto-scroll for promotions
     _promoTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (!mounted || _promoImages.isEmpty) return;
-      final next = (_currentPromo + 1) % _promoImages.length;
+      if (!mounted || _promoSlides.isEmpty) return;
+      final next = (_currentPromo + 1) % _promoSlides.length;
       _promoController.animateToPage(
         next,
         duration: const Duration(milliseconds: 400),
@@ -138,6 +153,23 @@ class _HomeViewState extends State<HomeView> {
         _currentPromo = next;
       });
     });
+  }
+
+  IconData _iconForProduct(ProductModel product) {
+    switch (product.category) {
+      case 'vitamins':
+        return Icons.eco;
+      case 'first_aid':
+        return Icons.medical_services;
+      case 'prescription_drugs':
+        return Icons.healing;
+      case 'groceries':
+        return Icons.shopping_basket;
+      case 'baby_care':
+        return Icons.child_care;
+      default:
+        return Icons.local_pharmacy;
+    }
   }
 
   @override
@@ -475,8 +507,7 @@ class _HomeViewState extends State<HomeView> {
                         left: Container(
                           alignment: Alignment.center,
                           width: 30,
-                          child: Image.asset("assets/img/search.png",
-                              width: 20, height: 20),
+                          child: Icon(Icons.search, color: TColor.secondaryText, size: 20),
                         ),
                         right: txtSearch.text.isNotEmpty
                             ? IconButton(
@@ -596,10 +627,10 @@ class _HomeViewState extends State<HomeView> {
       decoration: BoxDecoration(
         color: Colors.blue[50],
         borderRadius: BorderRadius.circular(20),
-        image: const DecorationImage(
-          image: AssetImage('assets/img/splash_bg.png'),
-          fit: BoxFit.cover,
-          opacity: 0.25,
+        gradient: LinearGradient(
+          colors: [Colors.blue[50]!, Colors.blue[100]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
@@ -723,36 +754,49 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
             child: PageView.builder(
               controller: _promoController,
-              itemCount: _promoImages.length,
+              itemCount: _promoSlides.length,
               onPageChanged: (i) => setState(() => _currentPromo = i),
               itemBuilder: (context, index) {
-                final img = _promoImages[index];
+                final slide = _promoSlides[index];
+                final List<Color> colors = (slide['colors'] as List<Color>);
                 return Padding(
                   padding: const EdgeInsets.only(left: 8, right: 8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(img, fit: BoxFit.cover),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [Colors.black.withOpacity(0.35), Colors.transparent],
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: colors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(14),
+                            child: Icon(slide['icon'] as IconData, color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(slide['title'] as String, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 4),
+                                Text(slide['subtitle'] as String, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                              ],
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: 16,
-                          bottom: 14,
-                          child: Text(
-                            'Limited-time offers',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
-                          ),
-                        ),
-                      ],
+                          const SizedBox(width: 16),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -762,7 +806,7 @@ class _HomeViewState extends State<HomeView> {
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(_promoImages.length, (i) {
+            children: List.generate(_promoSlides.length, (i) {
               final active = i == _currentPromo;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
@@ -1015,22 +1059,14 @@ class _HomeViewState extends State<HomeView> {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.medical_services),
-                );
-              },
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[50],
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(_iconForProduct(product), color: Colors.blueGrey[600]),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1144,19 +1180,11 @@ class _HomeViewState extends State<HomeView> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
+            child: Container(
               width: double.infinity,
               height: 90,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: double.infinity,
-                  height: 90,
-                  color: Colors.blue[50],
-                  child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
-                );
-              },
+              color: Colors.blue[50],
+              child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
             ),
           ),
 
@@ -1263,19 +1291,11 @@ class _HomeViewState extends State<HomeView> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.asset(
-              product.image ?? "assets/img/vitamins.png",
+            child: Container(
               width: double.infinity,
               height: 80,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: double.infinity,
-                  height: 80,
-                  color: Colors.green[50],
-                  child: Icon(Icons.shopping_basket, color: Colors.green[600], size: 30),
-                );
-              },
+              color: Colors.green[50],
+              child: Icon(Icons.shopping_basket, color: Colors.green[600], size: 30),
             ),
           ),
           Padding(
@@ -1351,19 +1371,11 @@ class _HomeViewState extends State<HomeView> {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Image.asset(
-                  product.image ?? "assets/img/med.png",
+                child: Container(
                   width: double.infinity,
                   height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 100,
-                      color: Colors.orange[50],
-                      child: Icon(Icons.local_offer, color: Colors.orange[600], size: 35),
-                    );
-                  },
+                  color: Colors.orange[50],
+                  child: Icon(Icons.local_offer, color: Colors.orange[600], size: 35),
                 ),
               ),
               Padding(
