@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'mobile' => '09123456789',
+            'address' => '123 Main St, Sample City',
         ]);
 
         // Seed medicines and vitamins
