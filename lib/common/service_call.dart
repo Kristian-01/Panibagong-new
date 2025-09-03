@@ -74,7 +74,7 @@ class ServiceCall {
 
         http
             .get(Uri.parse(fullUrl), headers: headers)
-            .timeout(const Duration(seconds: 5))
+            .timeout(const Duration(seconds: 20))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');
@@ -115,10 +115,15 @@ class ServiceCall {
           }
         }).catchError((e) {
           if (failure != null) {
+            final String errorText = e.toString();
             if (e is TimeoutException) {
               failure('Request timed out. Please check your connection and ensure the server is running.');
+            } else if (errorText.contains('SocketException')) {
+              failure('Network unreachable. Verify API URL and device connectivity.');
+            } else if (errorText.contains('HandshakeException')) {
+              failure('SSL handshake failed. Use http:// for local dev or fix certificate.');
             } else {
-              failure('Connection error: ${e.toString()}');
+              failure('Connection error: $errorText');
             }
           }
         });
@@ -164,7 +169,7 @@ class ServiceCall {
 
         http
             .post(Uri.parse(path), body: jsonBody, headers: headers)
-            .timeout(const Duration(seconds: 5))
+            .timeout(const Duration(seconds: 60))
             .then((value) {
           if (kDebugMode) {
             print('API Response Status: ${value.statusCode}');
@@ -205,10 +210,15 @@ class ServiceCall {
           }
         }).catchError((e) {
           if (failure != null) {
+            final String errorText = e.toString();
             if (e is TimeoutException) {
               failure('Request timed out. Please check your connection and ensure the server is running.');
+            } else if (errorText.contains('SocketException')) {
+              failure('Network unreachable. Verify API URL and device connectivity.');
+            } else if (errorText.contains('HandshakeException')) {
+              failure('SSL handshake failed. Use http:// for local dev or fix certificate.');
             } else {
-              failure('Connection error: ${e.toString()}');
+              failure('Connection error: $errorText');
             }
           }
         });

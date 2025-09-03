@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '/common/color_extension.dart';
 import '/common_widget/round_textfield.dart';
 
@@ -36,6 +37,31 @@ class _HomeViewState extends State<HomeView> {
   List<ProductModel> groceriesHighlights = [];
   List<ProductModel> specialOffers = [];
   String currentAddress = "Current Location";
+
+  // Promotions carousel
+  final PageController _promoController = PageController(viewportFraction: 0.9);
+  int _currentPromo = 0;
+  Timer? _promoTimer;
+  final List<Map<String, dynamic>> _promoSlides = [
+    {
+      'icon': Icons.local_offer,
+      'title': 'Big Savings',
+      'subtitle': 'Today only',
+      'colors': [Colors.blue, Colors.lightBlueAccent],
+    },
+    {
+      'icon': Icons.health_and_safety,
+      'title': 'Vitamins Deals',
+      'subtitle': 'Boost your immunity',
+      'colors': [Colors.green, Colors.lightGreen],
+    },
+    {
+      'icon': Icons.delivery_dining,
+      'title': 'Free Delivery',
+      'subtitle': 'On eligible orders',
+      'colors': [Colors.orange, Colors.deepOrangeAccent],
+    },
+  ];
 
   // Pharmacy categories with proper images
   List catArr = [
@@ -113,12 +139,45 @@ class _HomeViewState extends State<HomeView> {
     ];
     
     _loadHomeData();
+
+    // start auto-scroll for promotions
+    _promoTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!mounted || _promoSlides.isEmpty) return;
+      final next = (_currentPromo + 1) % _promoSlides.length;
+      _promoController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+      setState(() {
+        _currentPromo = next;
+      });
+    });
+  }
+
+  IconData _iconForProduct(ProductModel product) {
+    switch (product.category) {
+      case 'vitamins':
+        return Icons.eco;
+      case 'first_aid':
+        return Icons.medical_services;
+      case 'prescription_drugs':
+        return Icons.healing;
+      case 'groceries':
+        return Icons.shopping_basket;
+      case 'baby_care':
+        return Icons.child_care;
+      default:
+        return Icons.local_pharmacy;
+    }
   }
 
   @override
   void dispose() {
     txtSearch.removeListener(_onSearchChanged);
     txtSearch.dispose();
+    _promoTimer?.cancel();
+    _promoController.dispose();
     super.dispose();
   }
 
@@ -448,8 +507,7 @@ class _HomeViewState extends State<HomeView> {
                         left: Container(
                           alignment: Alignment.center,
                           width: 30,
-                          child: Image.asset("assets/img/search.png",
-                              width: 20, height: 20),
+                          child: Icon(Icons.search, color: TColor.secondaryText, size: 20),
                         ),
                         right: txtSearch.text.isNotEmpty
                             ? IconButton(
@@ -563,6 +621,210 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // Hero banner with metrics and CTAs, inspired by provided reference
+  Widget _buildHeroBanner() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blue[50],
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [Colors.blue[50]!, Colors.blue[100]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.verified, color: Colors.teal, size: 16),
+                    SizedBox(width: 6),
+                    Text('Licensed & Certified Pharmacy', style: TextStyle(fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Your Health',
+            style: TextStyle(
+              color: TColor.white,
+              fontSize: 30,
+              fontWeight: FontWeight.w900,
+              shadows: [
+                Shadow(color: Colors.black.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 2)),
+              ],
+            ),
+          ),
+          Text(
+            'Delivered Fast',
+            style: TextStyle(
+              color: Colors.blue[800],
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Order medicines and healthcare products from licensed pharmacists with secure, fast delivery.',
+            style: TextStyle(color: TColor.primaryText.withOpacity(0.8), fontSize: 13, height: 1.3),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _navigateToProducts('', 'All Products'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.local_mall, color: Colors.white, size: 18),
+                  label: const Text('Browse Medicines', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _navigateToProducts('prescription_drugs', 'Prescription Medicines'),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.blue[700]!),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: Colors.white.withOpacity(0.85),
+                  ),
+                  icon: Icon(Icons.upload_file, color: Colors.blue[700], size: 18),
+                  label: Text('Prescription Upload', style: TextStyle(color: Colors.blue[700])),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildHeroMetric(Icons.star, '4.9', 'Trust Rating', Colors.pinkAccent),
+              _buildHeroMetric(Icons.timer, '2hr', 'Avg Delivery', Colors.blueAccent),
+              _buildHeroMetric(Icons.medical_services, '10K+', 'Medicines', Colors.green),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroMetric(IconData icon, String value, String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value, style: TextStyle(fontWeight: FontWeight.w800, color: TColor.primaryText)),
+            Text(label, style: TextStyle(fontSize: 11, color: TColor.secondaryText)),
+          ],
+        )
+      ],
+    );
+  }
+
+  Widget _buildPromotionsCarousel() {
+    return SizedBox(
+      height: 140,
+      child: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _promoController,
+              itemCount: _promoSlides.length,
+              onPageChanged: (i) => setState(() => _currentPromo = i),
+              itemBuilder: (context, index) {
+                final slide = _promoSlides[index];
+                final List<Color> colors = (slide['colors'] as List<Color>);
+                return Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: colors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 16),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(14),
+                            child: Icon(slide['icon'] as IconData, color: Colors.white, size: 28),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(slide['title'] as String, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 4),
+                                Text(slide['subtitle'] as String, style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_promoSlides.length, (i) {
+              final active = i == _currentPromo;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: active ? 18 : 8,
+                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: active ? Colors.blue[700] : Colors.blue[200],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              );
+            }),
+          )
+        ],
+      ),
+    );
+  }
+
   Widget _buildHomeContent() {
     if (allProducts.isEmpty) {
       return Padding(
@@ -601,6 +863,16 @@ class _HomeViewState extends State<HomeView> {
 
     return Column(
       children: [
+        // Hero banner section with headline and CTAs
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _buildHeroBanner(),
+        ),
+        const SizedBox(height: 20),
+
+        // Promotions carousel
+        _buildPromotionsCarousel(),
+        const SizedBox(height: 20),
         // Categories
         Container(
           height: 130,
@@ -626,17 +898,24 @@ class _HomeViewState extends State<HomeView> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ViewAllTitleRow(
-              title: "Featured Medicines", 
+              title: "Top Picks For You", 
               onView: () => _navigateToProducts('', 'All Products')
             ),
           ),
           const SizedBox(height: 15),
-          Container(
-            height: 220,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: featuredMedicines.length,
+          // Grid view to make products front and center
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.78,
+              ),
+              itemCount: featuredMedicines.length.clamp(0, 6),
               itemBuilder: (context, index) {
                 var product = featuredMedicines[index];
                 return _buildFeaturedMedicineCard(product);
@@ -780,22 +1059,14 @@ class _HomeViewState extends State<HomeView> {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 60,
-                  height: 60,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.medical_services),
-                );
-              },
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[50],
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(_iconForProduct(product), color: Colors.blueGrey[600]),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -909,19 +1180,11 @@ class _HomeViewState extends State<HomeView> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.asset(
-              product.image ?? "assets/img/med.png",
+            child: Container(
               width: double.infinity,
               height: 90,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: double.infinity,
-                  height: 90,
-                  color: Colors.blue[50],
-                  child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
-                );
-              },
+              color: Colors.blue[50],
+              child: Icon(Icons.medication, color: Colors.blue[600], size: 30),
             ),
           ),
 
@@ -1028,19 +1291,11 @@ class _HomeViewState extends State<HomeView> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.asset(
-              product.image ?? "assets/img/vitamins.png",
+            child: Container(
               width: double.infinity,
               height: 80,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: double.infinity,
-                  height: 80,
-                  color: Colors.green[50],
-                  child: Icon(Icons.shopping_basket, color: Colors.green[600], size: 30),
-                );
-              },
+              color: Colors.green[50],
+              child: Icon(Icons.shopping_basket, color: Colors.green[600], size: 30),
             ),
           ),
           Padding(
@@ -1116,19 +1371,11 @@ class _HomeViewState extends State<HomeView> {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Image.asset(
-                  product.image ?? "assets/img/med.png",
+                child: Container(
                   width: double.infinity,
                   height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 100,
-                      color: Colors.orange[50],
-                      child: Icon(Icons.local_offer, color: Colors.orange[600], size: 35),
-                    );
-                  },
+                  color: Colors.orange[50],
+                  child: Icon(Icons.local_offer, color: Colors.orange[600], size: 35),
                 ),
               ),
               Padding(
