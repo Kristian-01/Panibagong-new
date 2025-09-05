@@ -63,37 +63,8 @@ class _HomeViewState extends State<HomeView> {
     },
   ];
 
-  // Pharmacy categories with proper images
-  List catArr = [
-    {
-      "image": "assets/img/med.png", 
-      "name": "Pain Relief", 
-      "category": "medicines",
-      "description": "Headache & Fever",
-      "color": Colors.blue[100]
-    },
-    {
-      "image": "assets/img/vitamins.png", 
-      "name": "Vitamins", 
-      "category": "vitamins",
-      "description": "Health Supplements",
-      "color": Colors.green[100]
-    },
-    {
-      "image": "assets/img/first aid.png", 
-      "name": "First Aid", 
-      "category": "first_aid",
-      "description": "Wound Care & Safety",
-      "color": Colors.red[100]
-    },
-    {
-      "image": "assets/img/med.png", 
-      "name": "Prescription", 
-      "category": "prescription_drugs",
-      "description": "Doctor Required",
-      "color": Colors.orange[100]
-    },
-  ];
+  // Removed: Pharmacy categories list
+  // List catArr = [...];
 
   // Quick Links for pharmacy
   List quickLinks = [];
@@ -387,11 +358,16 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: RefreshIndicator(
         onRefresh: _loadHomeData,
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 20 + MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 46),
@@ -873,25 +849,7 @@ class _HomeViewState extends State<HomeView> {
         // Promotions carousel
         _buildPromotionsCarousel(),
         const SizedBox(height: 20),
-        // Categories
-        Container(
-          height: 130,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            itemCount: catArr.length,
-            itemBuilder: (context, index) {
-              var cObj = catArr[index] as Map? ?? {};
-              return CategoryCell(
-                cObj: cObj, 
-                onTap: () {
-                  // Navigate to category products
-                  _navigateToCategory(cObj['category'] ?? '');
-                }
-              );
-            },
-          ),
-        ),
+        // Categories section removed as requested
 
         // Featured Medicines Section
         if (featuredMedicines.isNotEmpty) ...[

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_icon_button.dart';
 import '../../view/more/add_card_view.dart';
+import '../../services/payment_service.dart';
 
 import '../../common_widget/round_button.dart';
 import 'my_order_view.dart';
@@ -14,12 +15,20 @@ class PaymentDetailsView extends StatefulWidget {
 }
 
 class _PaymentDetailsViewState extends State<PaymentDetailsView> {
-  List cardArr = [
-    {
-      "icon": "assets/img/visa_icon.png",
-      "card": "**** **** **** 2187",
-    }
-  ];
+  List<Map<String, dynamic>> cardArr = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCards();
+  }
+
+  Future<void> _loadCards() async {
+    final cards = await PaymentService.getCards();
+    setState(() {
+      cardArr = cards;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,24 +147,19 @@ class _PaymentDetailsViewState extends State<PaymentDetailsView> {
                       padding: EdgeInsets.zero,
                       itemCount: cardArr.length,
                       itemBuilder: ((context, index) {
-                        var cObj = cardArr[index] as Map? ?? {};
+                        var cObj = cardArr[index] as Map<String, dynamic>;
                         return Container(
                           margin: const EdgeInsets.symmetric(
                               vertical: 15, horizontal: 35),
                           child: Row(
                             children: [
-                              Image.asset(
-                                cObj["icon"].toString(),
-                                width: 50,
-                                height: 35,
-                                fit: BoxFit.contain,
-                              ),
+                              _brandIcon(cObj['brand'] ?? 'card'),
                               const SizedBox(
                                 width: 15,
                               ),
                               Expanded(
                                 child: Text(
-                                  cObj["card"].toString(),
+                                  cObj["masked"].toString(),
                                   style: TextStyle(
                                       color: TColor.secondaryText,
                                       fontSize: 12,
@@ -168,7 +172,10 @@ class _PaymentDetailsViewState extends State<PaymentDetailsView> {
                                 child: RoundButton(
                                   title: 'Delete Card',
                                   fontSize: 12,
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    await PaymentService.deleteCard(index);
+                                    await _loadCards();
+                                  },
                                   type: RoundButtonType.textPrimary,
                                 ),
                               )
@@ -216,14 +223,15 @@ class _PaymentDetailsViewState extends State<PaymentDetailsView> {
                     icon: "assets/img/add.png",
                     color: TColor.primary,
                     fontSize: 16,
-                    onPressed: () {
-                      showModalBottomSheet(
+                    onPressed: () async {
+                      await showModalBottomSheet(
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
                           context: context,
                           builder: (context) {
                             return const AddCardView();
                           });
+                      await _loadCards();
                       // Navigator.push(context, MaterialPageRoute(builder: (context) => const AddCardView() ));
                     }),
               ),
@@ -235,5 +243,22 @@ class _PaymentDetailsViewState extends State<PaymentDetailsView> {
         ),
       ),
     );
+  }
+
+  Widget _brandIcon(String brand) {
+    String path;
+    switch (brand) {
+      case 'visa':
+        path = 'assets/img/visa_icon.png';
+        break;
+      case 'mastercard':
+        path = 'assets/img/mastercard_icon.png';
+        break;
+      default:
+        path = 'assets/img/card_icon.png';
+    }
+    return Image.asset(path, width: 50, height: 35, fit: BoxFit.contain, errorBuilder: (c, e, s) {
+      return Icon(Icons.credit_card, color: TColor.primary);
+    });
   }
 }
