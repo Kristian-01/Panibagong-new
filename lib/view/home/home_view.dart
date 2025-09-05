@@ -387,11 +387,16 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: RefreshIndicator(
         onRefresh: _loadHomeData,
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: EdgeInsets.only(
+              top: 20,
+              bottom: 20 + MediaQuery.of(context).viewInsets.bottom,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 46),
