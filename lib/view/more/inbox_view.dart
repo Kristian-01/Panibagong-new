@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
+import '../../services/notification_service.dart';
 
 import 'my_order_view.dart';
 
@@ -11,68 +12,20 @@ class InboxView extends StatefulWidget {
 }
 
 class _InboxViewState extends State<InboxView> {
-  List inboxArr = [
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-    {
-      "title": "MealMonkey Promotions",
-      "detail":
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    },
-  ];
+  List<Map<String, dynamic>> inboxArr = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() {
+    // For now, reuse notification history as inbox messages placeholder
+    setState(() {
+      inboxArr = NotificationService.getNotificationHistory();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +78,14 @@ class _InboxViewState extends State<InboxView> {
                   ],
                 ),
               ),
+              if (inboxArr.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Center(
+                    child: Text('No messages', style: TextStyle(color: TColor.secondaryText)),
+                  ),
+                )
+              else
               ListView.separated(
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
@@ -137,11 +98,10 @@ class _InboxViewState extends State<InboxView> {
                       height: 1,
                     )),
                 itemBuilder: ((context, index) {
-                  var cObj = inboxArr[index] as Map? ?? {};
+                  var cObj = inboxArr[index];
                   return Container(
                     decoration: BoxDecoration(
-                        color:
-                            index % 4 != 1 ? TColor.white : TColor.textfield),
+                        color: index % 4 != 1 ? TColor.white : TColor.textfield),
                     padding: const EdgeInsets.symmetric(
                         vertical: 15, horizontal: 25),
                     child: Row(

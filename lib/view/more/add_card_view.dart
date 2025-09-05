@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_icon_button.dart';
 import '../../common_widget/round_textfield.dart';
+import '../../services/payment_service.dart';
 
 class AddCardView extends StatefulWidget {
   const AddCardView({super.key});
@@ -151,7 +152,19 @@ class _AddCardViewState extends State<AddCardView> {
                 color: TColor.primary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                onPressed: () {}),
+                onPressed: () async {
+                  if (txtCardNumber.text.trim().length < 12) return;
+                  if (txtCardMonth.text.isEmpty || txtCardYear.text.isEmpty) return;
+                  if (txtFirstName.text.isEmpty || txtLastName.text.isEmpty) return;
+                  await PaymentService.addCard(
+                    cardNumber: txtCardNumber.text.trim(),
+                    holderFirstName: txtFirstName.text.trim(),
+                    holderLastName: txtLastName.text.trim(),
+                    expiryMonth: txtCardMonth.text.trim(),
+                    expiryYear: txtCardYear.text.trim(),
+                  );
+                  if (mounted) Navigator.pop(context);
+                }),
             const SizedBox(
               height: 25,
             ),
