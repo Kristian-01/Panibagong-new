@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../view/login/login_view.dart';
 import '../../view/login/sing_up_view.dart';
+import '../../view/main_tabview/main_tabview.dart';
 
 import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
@@ -40,7 +41,7 @@ class _WelcomeViewState extends State<WelcomeView> {
               height: media.width * 0.1,
             ),
             Text(
-              "Discover the best foods from over 1,000\nrestaurants and fast delivery to your\ndoorstep",
+              "Order medicines, vitamins, and essentials from licensed pharmacists with fast, reliable delivery",
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: TColor.secondaryText,
@@ -77,6 +78,24 @@ class _WelcomeViewState extends State<WelcomeView> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const SignUpView(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: RoundButton(
+                title: "Continue as Guest",
+                type: RoundButtonType.textPrimary,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MainTabView(),
                     ),
                   );
                 },
